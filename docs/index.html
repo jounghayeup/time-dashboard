@@ -6,11 +6,15 @@
   <title>Work Timeline Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
-    h1 { margin-bottom: 8px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; background: #fafafa; color: #222; }
+    h1 { margin-bottom: 4px; }
+    h3 { margin: 0 0 8px; }
     .filters { margin: 12px 0; }
-    select { padding: 6px; }
-    .grid { display: grid; gap: 24px; grid-template-columns: 1fr; }
+    select { padding: 6px; font-size: 14px; }
+    .timeline-wrap { margin-bottom: 32px; }
+    .timeline-wrap canvas { width: 100% !important; }
+    .grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+    section { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
     canvas { max-width: 100%; }
   </style>
 </head>
@@ -20,10 +24,12 @@
     <label>프로젝트: </label>
     <select id="projectFilter"></select>
   </div>
-  <section>
+  <div class="timeline-wrap">
+    <section>
       <h3>일일 타임라인 (전체)</h3>
       <canvas id="dailyTimeline"></canvas>
     </section>
+  </div>
 
   <div class="grid">
     <section>
@@ -64,6 +70,21 @@
         return { byDow, byWeek, byMonth };
       }
 
+      const colors = {
+        'Daily Kickoff':'#00bcd4',
+        'GENERAL':'#66bb6a',
+        '3DVS':'#ff69b4',
+        'HMC EV':'#4a90e2',
+        '휴게':'#ffb74d',
+        'OnBoarding':'#ab47bc'
+      };
+
+      function niceMaxMinutes(maxValue) {
+        const padded = maxValue * 1.1;
+        const rounded = Math.ceil(padded / 60) * 60;
+        return Math.max(60, rounded || 60);
+      }
+
       function getWeek(d) {
         const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         const dayNum = date.getUTCDay() || 7;
@@ -75,75 +96,152 @@
       let charts = {};
       
       function renderDailyTimeline(entriesAll) {
-        // group by date, build stacked dataset per project for each date
         const dates = Array.from(new Set(entriesAll.map(e=>e.date))).sort();
         const projects = Array.from(new Set(entriesAll.map(e=>e.project)));
-        const dataByProject = projects.map(p => {
-          return dates.map(d => {
-            const total = entriesAll.filter(e=>e.date===d && e.project===p)
-              .reduce((s,e)=>s+e.minutes,0);
-            return total;
-          });
-        });
 
-        const colors = {
-          'Daily Kickoff':'#00bcd4',
-          'GENERAL':'#98ff98',
-          '3DVS':'#ff69b4',
-          'HMC EV':'#4a90e2',
-          '휴게':'#4caf50',
-          'OnBoarding':'#9c27b0'
-        };
+        // Convert minutes to hours for each project per date
+        const dataByProject = projects.map(p =>
+          dates.map(d =>
+            +(entriesAll.filter(e=>e.date===d && e.project===p)
+              .reduce((s,e)=>s+e.minutes,0) / 60).toFixed(2)
+          )
+        );
+
+        // colors defined above
+
+        // Dynamic canvas height: 40px per date row + padding
+        const canvas = document.getElementById('dailyTimeline');
+        canvas.style.height = Math.max(120, dates.length * 40 + 60) + 'px';
 
         if (charts.daily) charts.daily.destroy();
-        charts.daily = new Chart(document.getElementById('dailyTimeline'), {
+        charts.daily = new Chart(canvas, {
           type: 'bar',
           data: {
             labels: dates,
             datasets: projects.map((p, i)=>({
               label: p,
               data: dataByProject[i],
-              backgroundColor: colors[p] || '#bbb'
+              backgroundColor: colors[p] || '#bdbdbd',
+              borderRadius: 2
             }))
           },
           options: {
             indexAxis: 'y',
             responsive: true,
+            maintainAspectRatio: false,
             scales: {
-              x: { stacked: true, max: 24*60 },
-              y: { stacked: true }
+              x: {
+                stacked: true,
+                min: 0,
+                max: 24,
+                ticks: {
+                  stepSize: 2,
+                  callback: v => v + 'h'
+                },
+                title: { display: true, text: '시간 (hours)' }
+              },
+              y: {
+                stacked: true
+              }
             },
-            plugins: { legend: { position: 'bottom' } }
+            plugins: {
+              legend: { position: 'bottom' },
+              tooltip: {
+                callbacks: {
+                  label: ctx => {
+                    const hrs = ctx.raw;
+                    const mins = Math.round(hrs * 60);
+                    return `${ctx.dataset.label}: ${hrs}h (${mins}분)`;
+                  }
+                }
+              }
+            }
           }
         });
       }
 
+      const allComputed = compute(data.entries);
+      const fixedMaxDow = niceMaxMinutes(Math.max(...allComputed.byDow));
+      const fixedMaxWeek = niceMaxMinutes(Math.max(...Object.values(allComputed.byWeek)));
+      const fixedMaxMonth = niceMaxMinutes(Math.max(...Object.values(allComputed.byMonth)));
+      const allWeekKeys = Object.keys(allComputed.byWeek).sort();
+      const allMonthKeys = Object.keys(allComputed.byMonth).sort();
+      const dowLabels = ['일','월','화','수','목','금','토'];
+
+      function computeForProject(proj) {
+        const entries = data.entries.filter(e => e.project === proj);
+        const byDow = Array(7).fill(0);
+        const byWeek = {};
+        const byMonth = {};
+        for (const e of entries) {
+          const d = new Date(e.date);
+          byDow[d.getDay()] += e.minutes;
+          const weekKey = `${d.getFullYear()}-W${String(getWeek(d)).padStart(2,'0')}`;
+          const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+          byWeek[weekKey] = (byWeek[weekKey]||0) + e.minutes;
+          byMonth[monthKey] = (byMonth[monthKey]||0) + e.minutes;
+        }
+        return { byDow, byWeek, byMonth };
+      }
+
       function render(project) {
-        const filtered = project==='ALL' ? data.entries : data.entries.filter(e=>e.project===project);
-        const {byDow, byWeek, byMonth} = compute(filtered);
-        const dowLabels = ['일','월','화','수','목','금','토'];
-        const weekLabels = Object.keys(byWeek).sort();
-        const monthLabels = Object.keys(byMonth).sort();
+        const activeProjects = project === 'ALL' ? projects : [project];
+        const perProject = activeProjects.map(p => ({ project: p, ...computeForProject(p) }));
+
+        const dowDatasets = perProject.map(pp => ({
+          label: pp.project, data: pp.byDow,
+          backgroundColor: colors[pp.project] || '#bdbdbd', borderRadius: 2
+        }));
+        const weekDatasets = perProject.map(pp => ({
+          label: pp.project, data: allWeekKeys.map(k => pp.byWeek[k] || 0),
+          backgroundColor: colors[pp.project] || '#bdbdbd', borderRadius: 2
+        }));
+        const monthDatasets = perProject.map(pp => ({
+          label: pp.project, data: allMonthKeys.map(k => pp.byMonth[k] || 0),
+          backgroundColor: colors[pp.project] || '#bdbdbd', borderRadius: 2
+        }));
 
         if (charts.dow) charts.dow.destroy();
         if (charts.week) charts.week.destroy();
         if (charts.month) charts.month.destroy();
 
+        const yOpts = (max) => ({
+          stacked: true, min: 0, max,
+          ticks: { stepSize: 60, callback: v => (v/60).toFixed(0) + 'h' },
+          title: { display: true, text: '시간 (hours)' }
+        });
+
         charts.dow = new Chart(document.getElementById('dowChart'), {
           type: 'bar',
-          data: { labels: dowLabels, datasets: [{ label: '분', data: byDow }] },
+          data: { labels: dowLabels, datasets: dowDatasets },
+          options: {
+            scales: { x: { stacked: true }, y: yOpts(fixedMaxDow) },
+            plugins: { legend: { position: 'bottom' } }
+          }
         });
         charts.week = new Chart(document.getElementById('weekChart'), {
           type: 'bar',
-          data: { labels: weekLabels, datasets: [{ label: '분', data: weekLabels.map(k=>byWeek[k]) }] },
+          data: { labels: allWeekKeys, datasets: weekDatasets },
+          options: {
+            scales: { x: { stacked: true }, y: yOpts(fixedMaxWeek) },
+            plugins: { legend: { position: 'bottom' } }
+          }
         });
         charts.month = new Chart(document.getElementById('monthChart'), {
           type: 'bar',
-          data: { labels: monthLabels, datasets: [{ label: '분', data: monthLabels.map(k=>byMonth[k]) }] },
+          data: { labels: allMonthKeys, datasets: monthDatasets },
+          options: {
+            scales: { x: { stacked: true }, y: yOpts(fixedMaxMonth) },
+            plugins: { legend: { position: 'bottom' } }
+          }
         });
       }
 
-      filter.addEventListener('change', () => render(filter.value));
+      filter.addEventListener('change', () => {
+        render(filter.value);
+        const f = filter.value === 'ALL' ? data.entries : data.entries.filter(e=>e.project===filter.value);
+        renderDailyTimeline(f);
+      });
       render('ALL');
       renderDailyTimeline(data.entries);
     }
