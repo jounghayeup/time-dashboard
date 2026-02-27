@@ -11,8 +11,8 @@
     h3 { margin: 0 0 8px; }
     .filters { margin: 12px 0; }
     select { padding: 6px; font-size: 14px; }
-    .timeline-wrap { margin-bottom: 32px; }
-    .timeline-wrap canvas { width: 100% !important; }
+    .timeline-wrap { margin-bottom: 32px; max-height: 900px; overflow-y: auto; }
+    .timeline-wrap canvas { width: 100% !important; display: block; }
     .grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
     section { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
     canvas { max-width: 100%; }
@@ -112,7 +112,9 @@
         // Dynamic canvas height: clamp to avoid runaway scroll
         const canvas = document.getElementById('dailyTimeline');
         const targetHeight = Math.max(120, dates.length * 40 + 60);
-        canvas.style.height = Math.min(800, targetHeight) + 'px';
+        const clamped = Math.min(800, targetHeight);
+        canvas.style.height = clamped + 'px';
+        canvas.height = clamped;
 
         if (charts.daily) charts.daily.destroy();
         charts.daily = new Chart(canvas, {
