@@ -20,6 +20,11 @@
     <label>프로젝트: </label>
     <select id="projectFilter"></select>
   </div>
+  <section>
+      <h3>일일 타임라인 (전체)</h3>
+      <canvas id="dailyTimeline"></canvas>
+    </section>
+
   <div class="grid">
     <section>
       <h3>요일별 합계 (분)</h3>
@@ -68,6 +73,51 @@
       }
 
       let charts = {};
+      
+      function renderDailyTimeline(entriesAll) {
+        // group by date, build stacked dataset per project for each date
+        const dates = Array.from(new Set(entriesAll.map(e=>e.date))).sort();
+        const projects = Array.from(new Set(entriesAll.map(e=>e.project)));
+        const dataByProject = projects.map(p => {
+          return dates.map(d => {
+            const total = entriesAll.filter(e=>e.date===d && e.project===p)
+              .reduce((s,e)=>s+e.minutes,0);
+            return total;
+          });
+        });
+
+        const colors = {
+          'Daily Kickoff':'#00bcd4',
+          'GENERAL':'#98ff98',
+          '3DVS':'#ff69b4',
+          'HMC EV':'#4a90e2',
+          '휴게':'#4caf50',
+          'OnBoarding':'#9c27b0'
+        };
+
+        if (charts.daily) charts.daily.destroy();
+        charts.daily = new Chart(document.getElementById('dailyTimeline'), {
+          type: 'bar',
+          data: {
+            labels: dates,
+            datasets: projects.map((p, i)=>({
+              label: p,
+              data: dataByProject[i],
+              backgroundColor: colors[p] || '#bbb'
+            }))
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            scales: {
+              x: { stacked: true, max: 24*60 },
+              y: { stacked: true }
+            },
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+      }
+
       function render(project) {
         const filtered = project==='ALL' ? data.entries : data.entries.filter(e=>e.project===project);
         const {byDow, byWeek, byMonth} = compute(filtered);
@@ -95,6 +145,7 @@
 
       filter.addEventListener('change', () => render(filter.value));
       render('ALL');
+      renderDailyTimeline(data.entries);
     }
     load();
   </script>
