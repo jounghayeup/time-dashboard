@@ -1,1 +1,34 @@
-{"entries":[]}
+{
+  "entries": [
+    {
+      "date": "2026-02-27",
+      "project": "Daily Kickoff",
+      "minutes": 51
+    },
+    {
+      "date": "2026-02-27",
+      "project": "GENERAL",
+      "minutes": 56
+    },
+    {
+      "date": "2026-02-27",
+      "project": "3DVS",
+      "minutes": 399
+    },
+    {
+      "date": "2026-02-27",
+      "project": "HMC EV",
+      "minutes": 28
+    },
+    {
+      "date": "2026-02-27",
+      "project": "휴게",
+      "minutes": 146
+    },
+    {
+      "date": "2026-02-27",
+      "project": "OnBoarding",
+      "minutes": 45
+    }
+  ]
+}
