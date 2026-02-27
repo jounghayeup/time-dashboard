@@ -109,9 +109,10 @@
 
         // colors defined above
 
-        // Dynamic canvas height: 40px per date row + padding
+        // Dynamic canvas height: clamp to avoid runaway scroll
         const canvas = document.getElementById('dailyTimeline');
-        canvas.style.height = Math.max(120, dates.length * 40 + 60) + 'px';
+        const targetHeight = Math.max(120, dates.length * 40 + 60);
+        canvas.style.height = Math.min(800, targetHeight) + 'px';
 
         if (charts.daily) charts.daily.destroy();
         charts.daily = new Chart(canvas, {
