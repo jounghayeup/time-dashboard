@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Work Timeline Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+    h1 { margin-bottom: 8px; }
+    .filters { margin: 12px 0; }
+    select { padding: 6px; }
+    .grid { display: grid; gap: 24px; grid-template-columns: 1fr; }
+    canvas { max-width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>Work Timeline Dashboard</h1>
+  <div class="filters">
+    <label>프로젝트: </label>
+    <select id="projectFilter"></select>
+  </div>
+  <div class="grid">
+    <section>
+      <h3>요일별 합계 (분)</h3>
+      <canvas id="dowChart"></canvas>
+    </section>
+    <section>
+      <h3>주간 합계 (분)</h3>
+      <canvas id="weekChart"></canvas>
+    </section>
+    <section>
+      <h3>월간 합계 (분)</h3>
+      <canvas id="monthChart"></canvas>
+    </section>
+  </div>
+
+  <script>
+    async function load() {
+      const res = await fetch('./data.json');
+      const data = await res.json();
+
+      const projects = Array.from(new Set(data.entries.map(e => e.project)));
+      const filter = document.getElementById('projectFilter');
+      filter.innerHTML = '<option value="ALL">전체</option>' + projects.map(p => `<option>${p}</option>`).join('');
+
+      function compute(filtered) {
+        const byDow = Array(7).fill(0); // 0=Sun
+        const byWeek = {};
+        const byMonth = {};
+        for (const e of filtered) {
+          const d = new Date(e.date);
+          byDow[d.getDay()] += e.minutes;
+          const weekKey = `${d.getFullYear()}-W${String(getWeek(d)).padStart(2,'0')}`;
+          const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+          byWeek[weekKey] = (byWeek[weekKey]||0) + e.minutes;
+          byMonth[monthKey] = (byMonth[monthKey]||0) + e.minutes;
+        }
+        return { byDow, byWeek, byMonth };
+      }
+
+      function getWeek(d) {
+        const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        const dayNum = date.getUTCDay() || 7;
+        date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+        return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
+      }
+
+      let charts = {};
+      function render(project) {
+        const filtered = project==='ALL' ? data.entries : data.entries.filter(e=>e.project===project);
+        const {byDow, byWeek, byMonth} = compute(filtered);
+        const dowLabels = ['일','월','화','수','목','금','토'];
+        const weekLabels = Object.keys(byWeek).sort();
+        const monthLabels = Object.keys(byMonth).sort();
+
+        if (charts.dow) charts.dow.destroy();
+        if (charts.week) charts.week.destroy();
+        if (charts.month) charts.month.destroy();
+
+        charts.dow = new Chart(document.getElementById('dowChart'), {
+          type: 'bar',
+          data: { labels: dowLabels, datasets: [{ label: '분', data: byDow }] },
+        });
+        charts.week = new Chart(document.getElementById('weekChart'), {
+          type: 'bar',
+          data: { labels: weekLabels, datasets: [{ label: '분', data: weekLabels.map(k=>byWeek[k]) }] },
+        });
+        charts.month = new Chart(document.getElementById('monthChart'), {
+          type: 'bar',
+          data: { labels: monthLabels, datasets: [{ label: '분', data: monthLabels.map(k=>byMonth[k]) }] },
+        });
+      }
+
+      filter.addEventListener('change', () => render(filter.value));
+      render('ALL');
+    }
+    load();
+  </script>
+</body>
+</html>
