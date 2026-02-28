@@ -166,6 +166,45 @@
       margin-right: 6px; align-items: center;
     }
 
+    /* Expand button */
+    .card { position: relative; }
+    .card .expand-btn {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--text-muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; font-size: 14px; line-height: 1;
+    }
+    .card .expand-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--border-accent); color: var(--text-primary); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 5000;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+      display: none; align-items: center; justify-content: center;
+      padding: 32px; opacity: 0; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { display: flex; opacity: 1; }
+    .modal-content {
+      background: #111118; border: 1px solid var(--border-accent); border-radius: var(--radius);
+      width: 100%; max-width: 1200px; max-height: 90vh;
+      padding: 32px; overflow: auto; position: relative;
+      animation: modalIn 0.25s ease;
+    }
+    .modal-content h3 { font-size: 16px; font-weight: 500; color: var(--text-secondary); margin-bottom: 24px; }
+    .modal-content canvas { max-height: 70vh; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      color: var(--text-secondary); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; transition: all 0.2s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
     /* Animations */
     @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
     .stat-card:nth-child(1) { animation-delay: 0s; }
@@ -235,28 +274,68 @@
     </div>
 
     <!-- Daily Timeline -->
-    <div class="card section-gap">
+    <div class="card section-gap" id="card-timeline">
+      <button class="expand-btn" data-card="timeline" title="Expand">&#x26F6;</button>
       <h3>Daily Timeline <span style="color:var(--text-muted);font-weight:300">/ 8h goal</span></h3>
       <div id="timelineWrap" style="position:relative;"><canvas id="dailyTimeline"></canvas></div>
     </div>
 
     <div class="grid-3">
-      <div class="card">
+      <div class="card" id="card-dow">
+        <button class="expand-btn" data-card="dow" title="Expand">&#x26F6;</button>
         <h3>By Day of Week</h3>
         <canvas id="dowChart"></canvas>
       </div>
-      <div class="card">
+      <div class="card" id="card-week">
+        <button class="expand-btn" data-card="week" title="Expand">&#x26F6;</button>
         <h3>Weekly Total</h3>
         <canvas id="weekChart"></canvas>
       </div>
-      <div class="card">
+      <div class="card" id="card-month">
+        <button class="expand-btn" data-card="month" title="Expand">&#x26F6;</button>
         <h3>Monthly Total</h3>
         <canvas id="monthChart"></canvas>
       </div>
     </div>
   </div>
 
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-content">
+      <button class="modal-close" id="modalClose">&#x2715;</button>
+      <h3 id="modalTitle"></h3>
+      <div id="modalBody" style="position:relative;"></div>
+    </div>
+  </div>
+
   <script>
+    // Modal logic
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+    let modalChart = null;
+
+    function openModal(title, chartConfig, height) {
+      modalTitle.textContent = title;
+      modalBody.innerHTML = '<canvas id="modalCanvas"></canvas>';
+      const h = height || '70vh';
+      modalBody.style.height = h;
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      if (modalChart) modalChart.destroy();
+      modalChart = new Chart(document.getElementById('modalCanvas'), chartConfig);
+    }
+
+    function closeModal() {
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+      if (modalChart) { modalChart.destroy(); modalChart = null; }
+    }
+
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
     const COLORS = {
       'Daily Kickoff': '#22d3ee',
       'GENERAL':       '#a3e635',
@@ -436,6 +515,7 @@
 
       // Charts
       let charts = {};
+      let chartConfigs = {};
       const tooltipStyle = {
         backgroundColor: 'rgba(10,10,15,0.95)',
         borderColor: 'rgba(255,255,255,0.08)',
@@ -481,8 +561,7 @@
         const wrap = document.getElementById('timelineWrap');
         const h = fDates.length * 48 + 60;
         wrap.style.height = Math.max(80, Math.min(500, h)) + 'px';
-        if (charts.daily) charts.daily.destroy();
-        charts.daily = new Chart(document.getElementById('dailyTimeline'), {
+        const timelineConfig = {
           type: 'bar',
           data: { labels: fDates, datasets },
           options: {
@@ -496,7 +575,10 @@
               annotation: { annotations: { goal: goalAnnotation } }
             }
           }
-        });
+        };
+        chartConfigs.timeline = { title: 'Daily Timeline', config: timelineConfig, height: Math.max(300, fDates.length * 48 + 80) + 'px' };
+        if (charts.daily) charts.daily.destroy();
+        charts.daily = new Chart(document.getElementById('dailyTimeline'), timelineConfig);
       }
 
       function renderCharts(filtered) {
@@ -563,21 +645,29 @@
         if (charts.week) charts.week.destroy();
         if (charts.month) charts.month.destroy();
 
-        charts.dow = new Chart(document.getElementById('dowChart'), {
+        const dowConfig = {
           type: 'bar',
           data: { labels: dowLabels, datasets: perProject.map(pp => ({ label: pp.project, data: pp.byDow, backgroundColor: color(pp.project), borderRadius: 3, borderSkipped: false })) },
           options: barOpts(maxDow)
-        });
-        charts.week = new Chart(document.getElementById('weekChart'), {
+        };
+        const weekConfig = {
           type: 'bar',
           data: { labels: allWeeks, datasets: perProject.map(pp => ({ label: pp.project, data: allWeeks.map(k => pp.byWeek[k] || 0), backgroundColor: color(pp.project), borderRadius: 3, borderSkipped: false })) },
           options: barOpts(maxWeek)
-        });
-        charts.month = new Chart(document.getElementById('monthChart'), {
+        };
+        const monthConfig = {
           type: 'bar',
           data: { labels: allMonths, datasets: perProject.map(pp => ({ label: pp.project, data: allMonths.map(k => pp.byMonth[k] || 0), backgroundColor: color(pp.project), borderRadius: 3, borderSkipped: false })) },
           options: barOpts(maxMonth)
-        });
+        };
+
+        chartConfigs.dow = { title: 'By Day of Week', config: dowConfig };
+        chartConfigs.week = { title: 'Weekly Total', config: weekConfig };
+        chartConfigs.month = { title: 'Monthly Total', config: monthConfig };
+
+        charts.dow = new Chart(document.getElementById('dowChart'), dowConfig);
+        charts.week = new Chart(document.getElementById('weekChart'), weekConfig);
+        charts.month = new Chart(document.getElementById('monthChart'), monthConfig);
       }
 
       const rangeFilter = document.getElementById('rangeFilter');
@@ -600,6 +690,20 @@
       filter.addEventListener('change', applyFilters);
       rangeFilter.addEventListener('change', applyFilters);
       applyFilters();
+
+      // Expand buttons
+      document.querySelectorAll('.expand-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const key = btn.dataset.card;
+          const cc = chartConfigs[key];
+          if (!cc) return;
+          const cfg = JSON.parse(JSON.stringify(cc.config));
+          cfg.options.maintainAspectRatio = false;
+          cfg.options.responsive = true;
+          openModal(cc.title, cfg, cc.height || '60vh');
+        });
+      });
     }
     load();
   </script>
