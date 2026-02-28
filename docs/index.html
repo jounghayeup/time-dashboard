@@ -3,250 +3,541 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Work Timeline Dashboard</title>
+  <title>Work Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; background: #fafafa; color: #222; }
-    h1 { margin-bottom: 4px; }
-    h3 { margin: 0 0 8px; }
-    .filters { margin: 12px 0; }
-    select { padding: 6px; font-size: 14px; }
-    .timeline-wrap { margin-bottom: 32px; max-height: 900px; overflow-y: auto; }
-    .timeline-wrap canvas { width: 100% !important; display: block; }
-    .grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
-    section { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-    canvas { max-width: 100%; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep: #0a0a0f;
+      --bg-surface: rgba(255,255,255,0.03);
+      --bg-card: rgba(255,255,255,0.05);
+      --bg-card-hover: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.06);
+      --border-accent: rgba(255,255,255,0.12);
+      --text-primary: #e8e8ed;
+      --text-secondary: #7a7a8e;
+      --text-muted: #4a4a5e;
+      --accent: #6366f1;
+      --accent-glow: rgba(99,102,241,0.15);
+      --c-kickoff: #22d3ee;
+      --c-general: #a3e635;
+      --c-3dvs: #f472b6;
+      --c-hmcev: #60a5fa;
+      --c-break: #fbbf24;
+      --c-onboard: #c084fc;
+      --c-fallback: #94a3b8;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -40%; left: -20%;
+      width: 80%; height: 80%;
+      background: radial-gradient(ellipse, rgba(99,102,241,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -30%; right: -10%;
+      width: 60%; height: 70%;
+      background: radial-gradient(ellipse, rgba(244,114,182,0.04) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Grain overlay */
+    .grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* Header */
+    header {
+      margin-bottom: 40px;
+    }
+    header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+    }
+    header h1 span {
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .filter-group label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+    select {
+      appearance: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 32px 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%237a7a8e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+    select:hover { border-color: var(--border-accent); background: var(--bg-card-hover); }
+    select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+    /* Stats row */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+      animation: fadeUp 0.5s ease both;
+    }
+    .stat-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-1px);
+    }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .stat-value .unit {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 400;
+      margin-left: 2px;
+    }
+    .stat-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: background 0.2s, border-color 0.2s;
+      animation: fadeUp 0.6s ease both;
+    }
+    .card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+    }
+    .card h3 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      letter-spacing: -0.2px;
+    }
+
+    /* Layout */
+    .timeline-section {
+      margin-bottom: 20px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    /* Legend pills */
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .legend-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px 5px 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .legend-pill:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      color: var(--text-primary);
+    }
+    .legend-pill .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .legend-pill.active {
+      border-color: var(--border-accent);
+      color: var(--text-primary);
+    }
+
+    /* Canvas */
+    canvas { display: block; }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .stat-card:nth-child(1) { animation-delay: 0s; }
+    .stat-card:nth-child(2) { animation-delay: 0.05s; }
+    .stat-card:nth-child(3) { animation-delay: 0.1s; }
+    .stat-card:nth-child(4) { animation-delay: 0.15s; }
+    .stat-card:nth-child(5) { animation-delay: 0.2s; }
+    .timeline-section .card { animation-delay: 0.15s; }
+    .grid-3 .card:nth-child(1) { animation-delay: 0.2s; }
+    .grid-3 .card:nth-child(2) { animation-delay: 0.25s; }
+    .grid-3 .card:nth-child(3) { animation-delay: 0.3s; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .grid-3 { grid-template-columns: 1fr; }
+      .container { padding: 24px 16px 60px; }
+    }
+    @media (max-width: 600px) {
+      header h1 { font-size: 22px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .header-row { flex-direction: column; align-items: flex-start; }
+    }
   </style>
 </head>
 <body>
-  <h1>Work Timeline Dashboard</h1>
-  <div class="filters">
-    <label>프로젝트: </label>
-    <select id="projectFilter"></select>
-  </div>
-  <div class="timeline-wrap">
-    <section>
-      <h3>일일 타임라인 (전체)</h3>
-      <canvas id="dailyTimeline"></canvas>
-    </section>
-  </div>
+  <div class="grain"></div>
+  <div class="container">
+    <header>
+      <div class="header-row">
+        <h1>Work Dashboard <span>/</span> <span>타임라인</span></h1>
+        <div class="filter-group">
+          <label>Filter</label>
+          <select id="projectFilter"></select>
+        </div>
+      </div>
+    </header>
 
-  <div class="grid">
-    <section>
-      <h3>요일별 합계 (분)</h3>
-      <canvas id="dowChart"></canvas>
-    </section>
-    <section>
-      <h3>주간 합계 (분)</h3>
-      <canvas id="weekChart"></canvas>
-    </section>
-    <section>
-      <h3>월간 합계 (분)</h3>
-      <canvas id="monthChart"></canvas>
-    </section>
+    <div class="stats" id="statsRow"></div>
+    <div class="legend-row" id="legendRow"></div>
+
+    <div class="timeline-section">
+      <div class="card">
+        <h3>Daily Timeline</h3>
+        <canvas id="dailyTimeline"></canvas>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="card">
+        <h3>By Day of Week</h3>
+        <canvas id="dowChart"></canvas>
+      </div>
+      <div class="card">
+        <h3>Weekly Total</h3>
+        <canvas id="weekChart"></canvas>
+      </div>
+      <div class="card">
+        <h3>Monthly Total</h3>
+        <canvas id="monthChart"></canvas>
+      </div>
+    </div>
   </div>
 
   <script>
+    const COLORS = {
+      'Daily Kickoff': '#22d3ee',
+      'GENERAL':       '#a3e635',
+      '3DVS':          '#f472b6',
+      'HMC EV':        '#60a5fa',
+      '휴게':           '#fbbf24',
+      'OnBoarding':    '#c084fc',
+    };
+    const FALLBACK = '#94a3b8';
+    const color = p => COLORS[p] || FALLBACK;
+
+    Chart.defaults.color = '#7a7a8e';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
+    Chart.defaults.font.family = "'Outfit', sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.plugins.legend.display = false;
+
+    function getWeek(d) {
+      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const dayNum = date.getUTCDay() || 7;
+      date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+      return Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+    }
+
+    function fmtHM(minutes) {
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    }
+
     async function load() {
       const res = await fetch('./data.json');
       const data = await res.json();
+      const entries = data.entries;
 
-      const projects = Array.from(new Set(data.entries.map(e => e.project)));
+      const projects = [...new Set(entries.map(e => e.project))];
+      const dates = [...new Set(entries.map(e => e.date))].sort();
+
+      // Filter
       const filter = document.getElementById('projectFilter');
-      filter.innerHTML = '<option value="ALL">전체</option>' + projects.map(p => `<option>${p}</option>`).join('');
+      filter.innerHTML = '<option value="ALL">All Projects</option>' +
+        projects.map(p => `<option value="${p}">${p}</option>`).join('');
 
-      function compute(filtered) {
-        const byDow = Array(7).fill(0); // 0=Sun
-        const byWeek = {};
-        const byMonth = {};
-        for (const e of filtered) {
-          const d = new Date(e.date);
-          byDow[d.getDay()] += e.minutes;
-          const weekKey = `${d.getFullYear()}-W${String(getWeek(d)).padStart(2,'0')}`;
-          const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-          byWeek[weekKey] = (byWeek[weekKey]||0) + e.minutes;
-          byMonth[monthKey] = (byMonth[monthKey]||0) + e.minutes;
-        }
-        return { byDow, byWeek, byMonth };
+      // Legend pills
+      const legendRow = document.getElementById('legendRow');
+      legendRow.innerHTML = projects.map(p =>
+        `<div class="legend-pill active" data-project="${p}">` +
+        `<span class="dot" style="background:${color(p)}"></span>${p}</div>`
+      ).join('');
+
+      // Stats
+      function renderStats(filtered) {
+        const totalMin = filtered.reduce((s, e) => s + e.minutes, 0);
+        const workMin = filtered.filter(e => e.project !== '휴게').reduce((s, e) => s + e.minutes, 0);
+        const breakMin = filtered.filter(e => e.project === '휴게').reduce((s, e) => s + e.minutes, 0);
+        const uniqueDates = [...new Set(filtered.map(e => e.date))];
+        const avgMin = uniqueDates.length > 0 ? Math.round(workMin / uniqueDates.length) : 0;
+        const topProject = Object.entries(
+          filtered.filter(e => e.project !== '휴게').reduce((acc, e) => {
+            acc[e.project] = (acc[e.project] || 0) + e.minutes; return acc;
+          }, {})
+        ).sort((a, b) => b[1] - a[1])[0];
+
+        const statsRow = document.getElementById('statsRow');
+        statsRow.innerHTML = `
+          <div class="stat-card">
+            <div class="stat-label">Total Time</div>
+            <div class="stat-value">${Math.floor(totalMin/60)}<span class="unit">h</span> ${totalMin%60}<span class="unit">m</span></div>
+            <div class="stat-sub">${uniqueDates.length} days tracked</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Work Time</div>
+            <div class="stat-value">${Math.floor(workMin/60)}<span class="unit">h</span> ${workMin%60}<span class="unit">m</span></div>
+            <div class="stat-sub">excl. break</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Break</div>
+            <div class="stat-value">${Math.floor(breakMin/60)}<span class="unit">h</span> ${breakMin%60}<span class="unit">m</span></div>
+            <div class="stat-sub">${totalMin > 0 ? Math.round(breakMin/totalMin*100) : 0}% of total</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Daily Avg</div>
+            <div class="stat-value">${Math.floor(avgMin/60)}<span class="unit">h</span> ${avgMin%60}<span class="unit">m</span></div>
+            <div class="stat-sub">work per day</div>
+          </div>
+          ${topProject ? `<div class="stat-card">
+            <div class="stat-label">Top Project</div>
+            <div class="stat-value" style="font-size:18px;color:${color(topProject[0])}">${topProject[0]}</div>
+            <div class="stat-sub">${fmtHM(topProject[1])}</div>
+          </div>` : ''}
+        `;
       }
 
-      const colors = {
-        'Daily Kickoff':'#00bcd4',
-        'GENERAL':'#66bb6a',
-        '3DVS':'#ff69b4',
-        'HMC EV':'#4a90e2',
-        '휴게':'#ffb74d',
-        'OnBoarding':'#ab47bc'
+      // Charts
+      let charts = {};
+      const tooltipStyle = {
+        backgroundColor: 'rgba(10,10,15,0.95)',
+        borderColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1,
+        titleFont: { family: "'Outfit', sans-serif", size: 13, weight: '500' },
+        bodyFont: { family: "'JetBrains Mono', monospace", size: 12 },
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: true,
+        boxPadding: 4,
+        callbacks: {
+          label: ctx => {
+            const mins = Math.round(ctx.raw * 60);
+            return ` ${ctx.dataset.label}: ${fmtHM(mins)}`;
+          }
+        }
+      };
+      const tooltipMin = {
+        ...tooltipStyle,
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${fmtHM(ctx.raw)}`
+        }
       };
 
-      function niceMaxMinutes(maxValue) {
-        const padded = maxValue * 1.1;
-        const rounded = Math.ceil(padded / 60) * 60;
-        return Math.max(60, rounded || 60);
-      }
-
-      function getWeek(d) {
-        const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        const dayNum = date.getUTCDay() || 7;
-        date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-        const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
-        return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
-      }
-
-      let charts = {};
-      
-      function renderDailyTimeline(entriesAll) {
-        const dates = Array.from(new Set(entriesAll.map(e=>e.date))).sort();
-        const projects = Array.from(new Set(entriesAll.map(e=>e.project)));
-
-        // Convert minutes to hours for each project per date
-        const dataByProject = projects.map(p =>
-          dates.map(d =>
-            +(entriesAll.filter(e=>e.date===d && e.project===p)
-              .reduce((s,e)=>s+e.minutes,0) / 60).toFixed(2)
-          )
-        );
-
-        // colors defined above
-
-        // Dynamic canvas height: clamp to avoid runaway scroll
+      function renderTimeline(filtered) {
+        const fDates = [...new Set(filtered.map(e => e.date))].sort();
+        const fProjects = [...new Set(filtered.map(e => e.project))];
+        const datasets = fProjects.map(p => ({
+          label: p,
+          data: fDates.map(d => +(filtered.filter(e => e.date === d && e.project === p).reduce((s, e) => s + e.minutes, 0) / 60).toFixed(2)),
+          backgroundColor: color(p),
+          borderRadius: 3,
+          borderSkipped: false,
+        }));
         const canvas = document.getElementById('dailyTimeline');
-        const targetHeight = Math.max(120, dates.length * 40 + 60);
-        const clamped = Math.min(800, targetHeight);
-        canvas.style.height = clamped + 'px';
-        canvas.height = clamped;
-
+        const h = Math.max(100, fDates.length * 44 + 40);
+        canvas.style.height = Math.min(600, h) + 'px';
+        canvas.height = Math.min(600, h);
         if (charts.daily) charts.daily.destroy();
         charts.daily = new Chart(canvas, {
           type: 'bar',
-          data: {
-            labels: dates,
-            datasets: projects.map((p, i)=>({
-              label: p,
-              data: dataByProject[i],
-              backgroundColor: colors[p] || '#bdbdbd',
-              borderRadius: 2
-            }))
-          },
+          data: { labels: fDates, datasets },
           options: {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              x: {
-                stacked: true,
-                min: 0,
-                max: 24,
-                ticks: {
-                  stepSize: 2,
-                  callback: v => v + 'h'
-                },
-                title: { display: true, text: '시간 (hours)' }
-              },
-              y: {
-                stacked: true
-              }
+              x: { stacked: true, min: 0, max: 14, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { stepSize: 2, callback: v => v + 'h', font: { family: "'JetBrains Mono', monospace", size: 11 } } },
+              y: { stacked: true, grid: { display: false }, ticks: { font: { family: "'JetBrains Mono', monospace", size: 11 } } }
             },
-            plugins: {
-              legend: { position: 'bottom' },
-              tooltip: {
-                callbacks: {
-                  label: ctx => {
-                    const hrs = ctx.raw;
-                    const mins = Math.round(hrs * 60);
-                    return `${ctx.dataset.label}: ${hrs}h (${mins}분)`;
-                  }
-                }
-              }
-            }
+            plugins: { tooltip: tooltipStyle }
           }
         });
       }
 
-      const allComputed = compute(data.entries);
-      const fixedMaxDow = niceMaxMinutes(Math.max(...allComputed.byDow));
-      const fixedMaxWeek = niceMaxMinutes(Math.max(...Object.values(allComputed.byWeek)));
-      const fixedMaxMonth = niceMaxMinutes(Math.max(...Object.values(allComputed.byMonth)));
-      const allWeekKeys = Object.keys(allComputed.byWeek).sort();
-      const allMonthKeys = Object.keys(allComputed.byMonth).sort();
-      const dowLabels = ['일','월','화','수','목','금','토'];
+      function renderCharts(filtered) {
+        const fProjects = [...new Set(filtered.map(e => e.project))];
+        const perProject = fProjects.map(p => {
+          const pEntries = filtered.filter(e => e.project === p);
+          const byDow = Array(7).fill(0);
+          const byWeek = {};
+          const byMonth = {};
+          for (const e of pEntries) {
+            const d = new Date(e.date);
+            byDow[d.getDay()] += e.minutes;
+            const wk = `${d.getFullYear()}-W${String(getWeek(d)).padStart(2, '0')}`;
+            const mo = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            byWeek[wk] = (byWeek[wk] || 0) + e.minutes;
+            byMonth[mo] = (byMonth[mo] || 0) + e.minutes;
+          }
+          return { project: p, byDow, byWeek, byMonth };
+        });
 
-      function computeForProject(proj) {
-        const entries = data.entries.filter(e => e.project === proj);
-        const byDow = Array(7).fill(0);
-        const byWeek = {};
-        const byMonth = {};
-        for (const e of entries) {
+        const allWeeks = [...new Set(filtered.flatMap(e => {
           const d = new Date(e.date);
-          byDow[d.getDay()] += e.minutes;
-          const weekKey = `${d.getFullYear()}-W${String(getWeek(d)).padStart(2,'0')}`;
-          const monthKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-          byWeek[weekKey] = (byWeek[weekKey]||0) + e.minutes;
-          byMonth[monthKey] = (byMonth[monthKey]||0) + e.minutes;
-        }
-        return { byDow, byWeek, byMonth };
-      }
+          return `${d.getFullYear()}-W${String(getWeek(d)).padStart(2, '0')}`;
+        }))].sort();
+        const allMonths = [...new Set(filtered.map(e => {
+          const d = new Date(e.date);
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }))].sort();
 
-      function render(project) {
-        const activeProjects = project === 'ALL' ? projects : [project];
-        const perProject = activeProjects.map(p => ({ project: p, ...computeForProject(p) }));
+        const dowLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const barOpts = (maxVal) => {
+          const max = Math.max(60, Math.ceil(maxVal * 1.15 / 60) * 60);
+          return {
+            responsive: true,
+            scales: {
+              x: { stacked: true, grid: { display: false } },
+              y: { stacked: true, min: 0, max, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { stepSize: 60, callback: v => (v / 60).toFixed(0) + 'h', font: { family: "'JetBrains Mono', monospace", size: 11 } } }
+            },
+            plugins: { tooltip: tooltipMin }
+          };
+        };
 
-        const dowDatasets = perProject.map(pp => ({
-          label: pp.project, data: pp.byDow,
-          backgroundColor: colors[pp.project] || '#bdbdbd', borderRadius: 2
-        }));
-        const weekDatasets = perProject.map(pp => ({
-          label: pp.project, data: allWeekKeys.map(k => pp.byWeek[k] || 0),
-          backgroundColor: colors[pp.project] || '#bdbdbd', borderRadius: 2
-        }));
-        const monthDatasets = perProject.map(pp => ({
-          label: pp.project, data: allMonthKeys.map(k => pp.byMonth[k] || 0),
-          backgroundColor: colors[pp.project] || '#bdbdbd', borderRadius: 2
-        }));
+        const maxDow = Math.max(...Array(7).fill(0).map((_, i) => perProject.reduce((s, pp) => s + pp.byDow[i], 0)));
+        const maxWeek = Math.max(...allWeeks.map(k => perProject.reduce((s, pp) => s + (pp.byWeek[k] || 0), 0)));
+        const maxMonth = Math.max(...allMonths.map(k => perProject.reduce((s, pp) => s + (pp.byMonth[k] || 0), 0)));
 
         if (charts.dow) charts.dow.destroy();
         if (charts.week) charts.week.destroy();
         if (charts.month) charts.month.destroy();
 
-        const yOpts = (max) => ({
-          stacked: true, min: 0, max,
-          ticks: { stepSize: 60, callback: v => (v/60).toFixed(0) + 'h' },
-          title: { display: true, text: '시간 (hours)' }
-        });
-
         charts.dow = new Chart(document.getElementById('dowChart'), {
           type: 'bar',
-          data: { labels: dowLabels, datasets: dowDatasets },
-          options: {
-            scales: { x: { stacked: true }, y: yOpts(fixedMaxDow) },
-            plugins: { legend: { position: 'bottom' } }
-          }
+          data: { labels: dowLabels, datasets: perProject.map(pp => ({ label: pp.project, data: pp.byDow, backgroundColor: color(pp.project), borderRadius: 3, borderSkipped: false })) },
+          options: barOpts(maxDow)
         });
         charts.week = new Chart(document.getElementById('weekChart'), {
           type: 'bar',
-          data: { labels: allWeekKeys, datasets: weekDatasets },
-          options: {
-            scales: { x: { stacked: true }, y: yOpts(fixedMaxWeek) },
-            plugins: { legend: { position: 'bottom' } }
-          }
+          data: { labels: allWeeks, datasets: perProject.map(pp => ({ label: pp.project, data: allWeeks.map(k => pp.byWeek[k] || 0), backgroundColor: color(pp.project), borderRadius: 3, borderSkipped: false })) },
+          options: barOpts(maxWeek)
         });
         charts.month = new Chart(document.getElementById('monthChart'), {
           type: 'bar',
-          data: { labels: allMonthKeys, datasets: monthDatasets },
-          options: {
-            scales: { x: { stacked: true }, y: yOpts(fixedMaxMonth) },
-            plugins: { legend: { position: 'bottom' } }
-          }
+          data: { labels: allMonths, datasets: perProject.map(pp => ({ label: pp.project, data: allMonths.map(k => pp.byMonth[k] || 0), backgroundColor: color(pp.project), borderRadius: 3, borderSkipped: false })) },
+          options: barOpts(maxMonth)
         });
       }
 
-      filter.addEventListener('change', () => {
-        render(filter.value);
-        const f = filter.value === 'ALL' ? data.entries : data.entries.filter(e=>e.project===filter.value);
-        renderDailyTimeline(f);
-      });
-      render('ALL');
-      renderDailyTimeline(data.entries);
+      function renderAll(project) {
+        const filtered = project === 'ALL' ? entries : entries.filter(e => e.project === project);
+        renderStats(filtered);
+        renderTimeline(filtered);
+        renderCharts(filtered);
+      }
+
+      filter.addEventListener('change', () => renderAll(filter.value));
+      renderAll('ALL');
     }
     load();
   </script>
