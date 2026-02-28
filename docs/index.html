@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -22,13 +23,6 @@
       --text-muted: #4a4a5e;
       --accent: #6366f1;
       --accent-glow: rgba(99,102,241,0.15);
-      --c-kickoff: #22d3ee;
-      --c-general: #a3e635;
-      --c-3dvs: #f472b6;
-      --c-hmcev: #60a5fa;
-      --c-break: #fbbf24;
-      --c-onboard: #c084fc;
-      --c-fallback: #94a3b8;
       --radius: 16px;
       --radius-sm: 10px;
     }
@@ -41,15 +35,13 @@
       overflow-x: hidden;
     }
 
-    /* Ambient background */
     body::before {
       content: '';
       position: fixed;
       top: -40%; left: -20%;
       width: 80%; height: 80%;
       background: radial-gradient(ellipse, rgba(99,102,241,0.06) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
+      pointer-events: none; z-index: 0;
     }
     body::after {
       content: '';
@@ -57,211 +49,131 @@
       bottom: -30%; right: -10%;
       width: 60%; height: 70%;
       background: radial-gradient(ellipse, rgba(244,114,182,0.04) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
+      pointer-events: none; z-index: 0;
     }
 
-    /* Grain overlay */
     .grain {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 9999;
-      opacity: 0.025;
+      position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.025;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
 
     .container {
-      position: relative;
-      z-index: 1;
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 40px 24px 80px;
+      position: relative; z-index: 1;
+      max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px;
     }
 
     /* Header */
-    header {
-      margin-bottom: 40px;
-    }
-    header h1 {
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: -0.5px;
-      color: var(--text-primary);
-    }
-    header h1 span {
-      color: var(--text-muted);
-      font-weight: 300;
-    }
-    .header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .filter-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .filter-group label {
-      font-size: 13px;
-      color: var(--text-secondary);
-      font-weight: 400;
-    }
+    header { margin-bottom: 40px; }
+    header h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.5px; }
+    header h1 span { color: var(--text-muted); font-weight: 300; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+    .filter-group { display: flex; align-items: center; gap: 10px; }
+    .filter-group label { font-size: 13px; color: var(--text-secondary); font-weight: 400; }
     select {
-      appearance: none;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--text-primary);
-      font-family: 'Outfit', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      padding: 8px 32px 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
+      appearance: none; background: var(--bg-card); border: 1px solid var(--border);
+      color: var(--text-primary); font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+      padding: 8px 32px 8px 14px; border-radius: 8px; cursor: pointer;
       transition: border-color 0.2s, background 0.2s;
       background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%237a7a8e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
+      background-repeat: no-repeat; background-position: right 12px center;
     }
     select:hover { border-color: var(--border-accent); background: var(--bg-card-hover); }
     select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 
-    /* Stats row */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 28px;
-    }
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
     .stat-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 18px 20px;
-      transition: background 0.2s, border-color 0.2s, transform 0.2s;
-      animation: fadeUp 0.5s ease both;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 18px 20px; transition: background 0.2s, border-color 0.2s, transform 0.2s; animation: fadeUp 0.5s ease both;
     }
-    .stat-card:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--border-accent);
-      transform: translateY(-1px);
-    }
-    .stat-label {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
-    }
-    .stat-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 24px;
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-    .stat-value .unit {
-      font-size: 13px;
-      color: var(--text-secondary);
-      font-weight: 400;
-      margin-left: 2px;
-    }
-    .stat-sub {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 4px;
-    }
+    .stat-card:hover { background: var(--bg-card-hover); border-color: var(--border-accent); transform: translateY(-1px); }
+    .stat-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 500; }
+    .stat-value .unit { font-size: 13px; color: var(--text-secondary); font-weight: 400; margin-left: 2px; }
+    .stat-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
     /* Cards */
     .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      transition: background 0.2s, border-color 0.2s;
-      animation: fadeUp 0.6s ease both;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 24px; transition: background 0.2s, border-color 0.2s; animation: fadeUp 0.6s ease both;
     }
-    .card:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--border-accent);
-    }
-    .card h3 {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      margin-bottom: 20px;
-      letter-spacing: -0.2px;
-    }
+    .card:hover { background: var(--bg-card-hover); border-color: var(--border-accent); }
+    .card h3 { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin-bottom: 20px; letter-spacing: -0.2px; }
 
     /* Layout */
-    .timeline-section {
-      margin-bottom: 20px;
-    }
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
+    .section-gap { margin-bottom: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 
     /* Legend pills */
-    .legend-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 24px;
-    }
+    .legend-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
     .legend-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--text-secondary);
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 5px 12px 5px 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      user-select: none;
+      display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary);
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
+      padding: 5px 12px 5px 8px; cursor: pointer; transition: all 0.2s; user-select: none;
     }
-    .legend-pill:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--border-accent);
-      color: var(--text-primary);
-    }
-    .legend-pill .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .legend-pill.active {
-      border-color: var(--border-accent);
-      color: var(--text-primary);
-    }
+    .legend-pill:hover { background: var(--bg-card-hover); border-color: var(--border-accent); color: var(--text-primary); }
+    .legend-pill .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .legend-pill.active { border-color: var(--border-accent); color: var(--text-primary); }
 
-    /* Canvas */
     canvas { display: block; }
 
-    /* Animations */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
+    /* ====== Heatmap ====== */
+    .heatmap-wrap { overflow-x: auto; padding-bottom: 8px; }
+    .heatmap-grid {
+      display: grid;
+      grid-template-rows: repeat(7, 14px);
+      grid-auto-flow: column;
+      grid-auto-columns: 14px;
+      gap: 3px;
     }
+    .heatmap-cell {
+      width: 14px; height: 14px; border-radius: 3px;
+      background: rgba(255,255,255,0.04);
+      transition: outline 0.15s;
+      position: relative;
+      cursor: default;
+    }
+    .heatmap-cell:hover { outline: 2px solid rgba(255,255,255,0.3); outline-offset: -1px; }
+    .heatmap-cell[data-tip]:hover::after {
+      content: attr(data-tip);
+      position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%);
+      background: rgba(10,10,15,0.95); border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      padding: 4px 8px; border-radius: 6px; white-space: nowrap; z-index: 10; pointer-events: none;
+    }
+    .hm-lv0 { background: rgba(255,255,255,0.04); }
+    .hm-lv1 { background: #0e4429; }
+    .hm-lv2 { background: #006d32; }
+    .hm-lv3 { background: #26a641; }
+    .hm-lv4 { background: #39d353; }
+    .hm-over { background: #f472b6; }
+
+    .heatmap-legend {
+      display: flex; align-items: center; gap: 6px; margin-top: 12px;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .heatmap-legend .swatch {
+      width: 14px; height: 14px; border-radius: 3px; display: inline-block;
+    }
+    .heatmap-months {
+      display: flex; gap: 0; margin-bottom: 6px;
+      font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+    }
+    .heatmap-months span { text-align: left; }
+    .heatmap-dow {
+      display: grid; grid-template-rows: repeat(7, 14px); gap: 3px;
+      font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
+      margin-right: 6px; align-items: center;
+    }
+
+    /* Animations */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
     .stat-card:nth-child(1) { animation-delay: 0s; }
     .stat-card:nth-child(2) { animation-delay: 0.05s; }
     .stat-card:nth-child(3) { animation-delay: 0.1s; }
     .stat-card:nth-child(4) { animation-delay: 0.15s; }
     .stat-card:nth-child(5) { animation-delay: 0.2s; }
-    .timeline-section .card { animation-delay: 0.15s; }
-    .grid-3 .card:nth-child(1) { animation-delay: 0.2s; }
-    .grid-3 .card:nth-child(2) { animation-delay: 0.25s; }
-    .grid-3 .card:nth-child(3) { animation-delay: 0.3s; }
 
-    /* Responsive */
     @media (max-width: 900px) {
       .grid-3 { grid-template-columns: 1fr; }
       .container { padding: 24px 16px 60px; }
@@ -297,11 +209,35 @@
     <div class="stats" id="statsRow"></div>
     <div class="legend-row" id="legendRow"></div>
 
-    <div class="timeline-section">
-      <div class="card">
-        <h3>Daily Timeline</h3>
-        <div id="timelineWrap" style="position:relative;"><canvas id="dailyTimeline"></canvas></div>
+    <!-- Heatmap -->
+    <div class="card section-gap">
+      <h3>Activity <span style="color:var(--text-muted);font-weight:300">/ 6 months</span></h3>
+      <div style="display:flex;">
+        <div class="heatmap-dow" id="hmDow"></div>
+        <div style="flex:1;overflow-x:auto;">
+          <div class="heatmap-months" id="hmMonths"></div>
+          <div class="heatmap-grid" id="hmGrid"></div>
+        </div>
       </div>
+      <div class="heatmap-legend">
+        <span>Less</span>
+        <span class="swatch hm-lv0"></span>
+        <span class="swatch hm-lv1"></span>
+        <span class="swatch hm-lv2"></span>
+        <span class="swatch hm-lv3"></span>
+        <span class="swatch hm-lv4"></span>
+        <span class="swatch hm-over"></span>
+        <span>More</span>
+        <span style="margin-left:12px;">|</span>
+        <span class="swatch hm-over" style="margin-left:6px;"></span>
+        <span>8h+ overtime</span>
+      </div>
+    </div>
+
+    <!-- Daily Timeline -->
+    <div class="card section-gap">
+      <h3>Daily Timeline <span style="color:var(--text-muted);font-weight:300">/ 8h goal</span></h3>
+      <div id="timelineWrap" style="position:relative;"><canvas id="dailyTimeline"></canvas></div>
     </div>
 
     <div class="grid-3">
@@ -331,6 +267,7 @@
     };
     const FALLBACK = '#94a3b8';
     const color = p => COLORS[p] || FALLBACK;
+    const GOAL_HOURS = 8;
 
     Chart.defaults.color = '#7a7a8e';
     Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
@@ -348,9 +285,11 @@
 
     function fmtHM(minutes) {
       const h = Math.floor(minutes / 60);
-      const m = minutes % 60;
+      const m = Math.round(minutes % 60);
       return h > 0 ? `${h}h ${m}m` : `${m}m`;
     }
+
+    function dateStr(d) { return d.toISOString().slice(0, 10); }
 
     async function load() {
       const res = await fetch('./data.json');
@@ -358,14 +297,90 @@
       const entries = data.entries;
 
       const projects = [...new Set(entries.map(e => e.project))];
-      const dates = [...new Set(entries.map(e => e.date))].sort();
 
-      // Filter
+      // Build day→workMinutes map (excl break)
+      const dayWork = {};
+      const dayTotal = {};
+      for (const e of entries) {
+        dayTotal[e.date] = (dayTotal[e.date] || 0) + e.minutes;
+        if (e.project !== '휴게') dayWork[e.date] = (dayWork[e.date] || 0) + e.minutes;
+      }
+
+      // === HEATMAP ===
+      (function renderHeatmap() {
+        const today = new Date();
+        const start = new Date(today);
+        start.setDate(start.getDate() - 182); // ~6 months
+        // Align to Sunday
+        start.setDate(start.getDate() - start.getDay());
+
+        const grid = document.getElementById('hmGrid');
+        const monthsRow = document.getElementById('hmMonths');
+        const dowEl = document.getElementById('hmDow');
+
+        // Day of week labels
+        const dowNames = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
+        dowEl.innerHTML = dowNames.map(d => `<div>${d}</div>`).join('');
+
+        // Generate cells
+        let cells = '';
+        let currentMonth = -1;
+        let monthPositions = [];
+        const d = new Date(start);
+        let col = 0;
+
+        while (d <= today) {
+          const ds = dateStr(d);
+          const workMin = dayWork[ds] || 0;
+          const workHrs = workMin / 60;
+          let lvl;
+          if (workMin === 0) lvl = 'hm-lv0';
+          else if (workHrs < 2) lvl = 'hm-lv1';
+          else if (workHrs < 4) lvl = 'hm-lv2';
+          else if (workHrs < 6) lvl = 'hm-lv3';
+          else if (workHrs < GOAL_HOURS) lvl = 'hm-lv4';
+          else lvl = 'hm-over';
+
+          const tip = workMin > 0 ? `${ds}: ${fmtHM(workMin)}` : `${ds}: no data`;
+
+          // Track month changes (on first row of each column)
+          if (d.getDay() === 0 && d.getMonth() !== currentMonth) {
+            currentMonth = d.getMonth();
+            monthPositions.push({ col, month: d.toLocaleString('en', { month: 'short' }) });
+          }
+
+          cells += `<div class="heatmap-cell ${lvl}" data-tip="${tip}"></div>`;
+          d.setDate(d.getDate() + 1);
+          if (d.getDay() === 0) col++;
+        }
+        // Pad remaining cells in last column
+        const rem = d.getDay();
+        if (rem > 0) {
+          for (let i = rem; i < 7; i++) {
+            cells += `<div class="heatmap-cell hm-lv0" style="visibility:hidden;"></div>`;
+          }
+        }
+
+        grid.innerHTML = cells;
+
+        // Month labels
+        const totalCols = col + (rem > 0 ? 1 : 0);
+        const colWidth = 17; // 14px + 3px gap
+        monthsRow.innerHTML = '';
+        monthPositions.forEach((mp, i) => {
+          const nextCol = i + 1 < monthPositions.length ? monthPositions[i + 1].col : totalCols;
+          const span = document.createElement('span');
+          span.textContent = mp.month;
+          span.style.width = (nextCol - mp.col) * colWidth + 'px';
+          monthsRow.appendChild(span);
+        });
+      })();
+
+      // Filter setup
       const filter = document.getElementById('projectFilter');
       filter.innerHTML = '<option value="ALL">All Projects</option>' +
         projects.map(p => `<option value="${p}">${p}</option>`).join('');
 
-      // Legend pills
       const legendRow = document.getElementById('legendRow');
       legendRow.innerHTML = projects.map(p =>
         `<div class="legend-pill active" data-project="${p}">` +
@@ -385,8 +400,12 @@
           }, {})
         ).sort((a, b) => b[1] - a[1])[0];
 
-        const statsRow = document.getElementById('statsRow');
-        statsRow.innerHTML = `
+        // Goal comparison
+        const goalDiff = avgMin - GOAL_HOURS * 60;
+        const goalText = goalDiff >= 0 ? `+${fmtHM(goalDiff)} over goal` : `${fmtHM(Math.abs(goalDiff))} under goal`;
+        const goalColor = goalDiff >= 0 ? '#39d353' : '#f47272';
+
+        document.getElementById('statsRow').innerHTML = `
           <div class="stat-card">
             <div class="stat-label">Total Time</div>
             <div class="stat-value">${Math.floor(totalMin/60)}<span class="unit">h</span> ${totalMin%60}<span class="unit">m</span></div>
@@ -405,7 +424,7 @@
           <div class="stat-card">
             <div class="stat-label">Daily Avg</div>
             <div class="stat-value">${Math.floor(avgMin/60)}<span class="unit">h</span> ${avgMin%60}<span class="unit">m</span></div>
-            <div class="stat-sub">work per day</div>
+            <div class="stat-sub" style="color:${goalColor}">${goalText}</div>
           </div>
           ${topProject ? `<div class="stat-card">
             <div class="stat-label">Top Project</div>
@@ -423,21 +442,30 @@
         borderWidth: 1,
         titleFont: { family: "'Outfit', sans-serif", size: 13, weight: '500' },
         bodyFont: { family: "'JetBrains Mono', monospace", size: 12 },
-        padding: 12,
-        cornerRadius: 8,
-        displayColors: true,
-        boxPadding: 4,
-        callbacks: {
-          label: ctx => {
-            const mins = Math.round(ctx.raw * 60);
-            return ` ${ctx.dataset.label}: ${fmtHM(mins)}`;
-          }
-        }
+        padding: 12, cornerRadius: 8, displayColors: true, boxPadding: 4,
+        callbacks: { label: ctx => { const mins = Math.round(ctx.raw * 60); return ` ${ctx.dataset.label}: ${fmtHM(mins)}`; } }
       };
       const tooltipMin = {
         ...tooltipStyle,
-        callbacks: {
-          label: ctx => ` ${ctx.dataset.label}: ${fmtHM(ctx.raw)}`
+        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtHM(ctx.raw)}` }
+      };
+
+      // 8h goal line annotation
+      const goalAnnotation = {
+        type: 'line',
+        xMin: GOAL_HOURS, xMax: GOAL_HOURS,
+        borderColor: 'rgba(255,255,255,0.25)',
+        borderWidth: 2,
+        borderDash: [6, 4],
+        label: {
+          display: true,
+          content: '8h goal',
+          position: 'end',
+          backgroundColor: 'rgba(255,255,255,0.08)',
+          color: 'rgba(255,255,255,0.5)',
+          font: { family: "'JetBrains Mono', monospace", size: 10 },
+          padding: { top: 2, bottom: 2, left: 6, right: 6 },
+          borderRadius: 4,
         }
       };
 
@@ -448,29 +476,25 @@
           label: p,
           data: fDates.map(d => +(filtered.filter(e => e.date === d && e.project === p).reduce((s, e) => s + e.minutes, 0) / 60).toFixed(2)),
           backgroundColor: color(p),
-          borderRadius: 3,
-          borderSkipped: false,
-          barThickness: 28,
-          maxBarThickness: 36,
+          borderRadius: 3, borderSkipped: false, barThickness: 28, maxBarThickness: 36,
         }));
         const wrap = document.getElementById('timelineWrap');
-        const canvas = document.getElementById('dailyTimeline');
         const h = fDates.length * 48 + 60;
-        const clamped = Math.max(80, Math.min(500, h));
-        wrap.style.height = clamped + 'px';
+        wrap.style.height = Math.max(80, Math.min(500, h)) + 'px';
         if (charts.daily) charts.daily.destroy();
-        charts.daily = new Chart(canvas, {
+        charts.daily = new Chart(document.getElementById('dailyTimeline'), {
           type: 'bar',
           data: { labels: fDates, datasets },
           options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
             scales: {
               x: { stacked: true, min: 0, max: 14, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { stepSize: 2, callback: v => v + 'h', font: { family: "'JetBrains Mono', monospace", size: 11 } } },
               y: { stacked: true, grid: { display: false }, ticks: { font: { family: "'JetBrains Mono', monospace", size: 11 } } }
             },
-            plugins: { tooltip: tooltipStyle }
+            plugins: {
+              tooltip: tooltipStyle,
+              annotation: { annotations: { goal: goalAnnotation } }
+            }
           }
         });
       }
@@ -494,24 +518,40 @@
         });
 
         const allWeeks = [...new Set(filtered.flatMap(e => {
-          const d = new Date(e.date);
-          return `${d.getFullYear()}-W${String(getWeek(d)).padStart(2, '0')}`;
+          const d = new Date(e.date); return `${d.getFullYear()}-W${String(getWeek(d)).padStart(2, '0')}`;
         }))].sort();
         const allMonths = [...new Set(filtered.map(e => {
-          const d = new Date(e.date);
-          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          const d = new Date(e.date); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
         }))].sort();
 
         const dowLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        // 8h goal line for vertical charts (in minutes)
+        const goalAnnotV = {
+          type: 'line',
+          yMin: GOAL_HOURS * 60, yMax: GOAL_HOURS * 60,
+          borderColor: 'rgba(255,255,255,0.2)',
+          borderWidth: 1.5,
+          borderDash: [6, 4],
+          label: {
+            display: true, content: '8h', position: 'start',
+            backgroundColor: 'transparent', color: 'rgba(255,255,255,0.35)',
+            font: { family: "'JetBrains Mono', monospace", size: 10 }, padding: 2,
+          }
+        };
+
         const barOpts = (maxVal) => {
-          const max = Math.max(60, Math.ceil(maxVal * 1.15 / 60) * 60);
+          const max = Math.max(GOAL_HOURS * 60 * 1.3, Math.ceil(maxVal * 1.15 / 60) * 60);
           return {
             responsive: true,
             scales: {
               x: { stacked: true, grid: { display: false } },
               y: { stacked: true, min: 0, max, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { stepSize: 60, callback: v => (v / 60).toFixed(0) + 'h', font: { family: "'JetBrains Mono', monospace", size: 11 } } }
             },
-            plugins: { tooltip: tooltipMin }
+            plugins: {
+              tooltip: tooltipMin,
+              annotation: { annotations: { goal: goalAnnotV } }
+            }
           };
         };
 
