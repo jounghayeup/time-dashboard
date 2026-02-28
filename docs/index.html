@@ -141,7 +141,7 @@
       color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-size: 11px;
       padding: 4px 8px; border-radius: 6px; white-space: nowrap; z-index: 10; pointer-events: none;
     }
-    .hm-lv0 { background: rgba(255,255,255,0.04); }
+    .hm-lv0 { background: rgba(255,255,255,0.08); }
     .hm-lv1 { background: #0e4429; }
     .hm-lv2 { background: #006d32; }
     .hm-lv3 { background: #26a641; }
@@ -375,7 +375,7 @@
       return h > 0 ? `${h}h ${m}m` : `${m}m`;
     }
 
-    function dateStr(d) { return d.toISOString().slice(0, 10); }
+    function dateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
     async function load() {
       const res = await fetch('./data.json');
