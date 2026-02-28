@@ -461,10 +461,29 @@
         projects.map(p => `<option value="${p}">${p}</option>`).join('');
 
       const legendRow = document.getElementById('legendRow');
-      legendRow.innerHTML = projects.map(p =>
-        `<div class="legend-pill active" data-project="${p}">` +
-        `<span class="dot" style="background:${color(p)}"></span>${p}</div>`
-      ).join('');
+      const activeProjects = new Set(projects);
+      function renderLegend() {
+        legendRow.innerHTML = projects.map(p => {
+          const isActive = activeProjects.has(p);
+          return `<div class="legend-pill ${isActive ? 'active' : ''}" data-project="${p}" style="${isActive ? '' : 'opacity:0.35;'}">` +
+            `<span class="dot" style="background:${color(p)}"></span>${p}</div>`;
+        }).join('');
+        // Bind click
+        legendRow.querySelectorAll('.legend-pill').forEach(pill => {
+          pill.addEventListener('click', () => {
+            const proj = pill.dataset.project;
+            if (activeProjects.has(proj)) {
+              if (activeProjects.size === 1) return; // at least 1 must stay
+              activeProjects.delete(proj);
+            } else {
+              activeProjects.add(proj);
+            }
+            renderLegend();
+            applyFilters();
+          });
+        });
+      }
+      renderLegend();
 
       // Stats
       function renderStats(filtered) {
@@ -676,6 +695,8 @@
         const proj = filter.value;
         const days = parseInt(rangeFilter.value);
         let filtered = proj === 'ALL' ? entries : entries.filter(e => e.project === proj);
+        // Apply legend pill toggles
+        filtered = filtered.filter(e => activeProjects.has(e.project));
         if (days > 0) {
           const cutoff = new Date();
           cutoff.setDate(cutoff.getDate() - days);
