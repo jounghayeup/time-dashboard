@@ -273,6 +273,12 @@
       </div>
     </div>
 
+    <!-- Forest -->
+    <div class="card section-gap" style="padding:0;overflow:hidden;border:none;background:transparent;">
+      <canvas id="forestCanvas" style="width:100%;display:block;border-radius:var(--radius);"></canvas>
+      <div id="forestCaption" style="text-align:center;padding:10px 0 4px;font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;"></div>
+    </div>
+
     <!-- Daily Timeline -->
     <div class="card section-gap" id="card-timeline">
       <button class="expand-btn" data-card="timeline" title="Expand">&#x26F6;</button>
@@ -713,6 +719,197 @@
       rangeFilter.addEventListener('change', applyFilters);
       applyFilters();
 
+
+      // === FOREST SCENE ===
+      (function renderForest() {
+        const canvas = document.getElementById('forestCanvas');
+        const ctx = canvas.getContext('2d');
+        const W = 1200, H = 340;
+        canvas.width = W; canvas.height = H;
+
+        // Calculate recent 7-day work average (excl breaks)
+        const sortedDates = [...new Set(entries.map(e => e.date))].sort().slice(-7);
+        let totalWorkMin = 0;
+        for (const d of sortedDates) {
+          totalWorkMin += entries.filter(e => e.date === d && e.project !== '휴게').reduce((s, e) => s + e.minutes, 0);
+        }
+        const avgHrs = sortedDates.length > 0 ? (totalWorkMin / sortedDates.length) / 60 : 0;
+
+        // Tree count: 8h = 10 trees, scale linearly, min 1, max 18
+        const treeCount = Math.max(1, Math.min(18, Math.round(avgHrs / 8 * 10)));
+
+        // Health: 0 (barren) to 1 (lush)
+        const health = Math.min(1, avgHrs / 8);
+
+        // Sky gradient - healthier = bluer sky, less = overcast
+        const skyTop = health > 0.7 ? '#0f172a' : health > 0.4 ? '#1a1a2e' : '#1e1e1e';
+        const skyBot = health > 0.7 ? '#1e3a5f' : health > 0.4 ? '#2a2a3e' : '#2a2a2a';
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, skyTop);
+        grad.addColorStop(0.65, skyBot);
+        grad.addColorStop(0.65, '#1a2e1a');
+        grad.addColorStop(1, '#0f1f0f');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Stars (more visible when health is high)
+        const starCount = health > 0.5 ? 40 : 15;
+        for (let i = 0; i < starCount; i++) {
+          const sx = Math.random() * W;
+          const sy = Math.random() * H * 0.55;
+          const sr = Math.random() * 1.5 + 0.3;
+          const alpha = Math.random() * 0.6 + 0.2;
+          ctx.beginPath();
+          ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+          ctx.fill();
+        }
+
+        // Moon
+        if (health > 0.5) {
+          ctx.beginPath();
+          ctx.arc(W - 100, 60, 22, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,240,0.12)';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(W - 100, 60, 18, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255,255,240,0.2)';
+          ctx.fill();
+        }
+
+        // Ground hills
+        const groundY = H * 0.62;
+        ctx.beginPath();
+        ctx.moveTo(0, groundY + 20);
+        for (let x = 0; x <= W; x += 2) {
+          const y = groundY + Math.sin(x * 0.008) * 12 + Math.sin(x * 0.025) * 5;
+          ctx.lineTo(x, y);
+        }
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+        const groundGrad = ctx.createLinearGradient(0, groundY, 0, H);
+        groundGrad.addColorStop(0, health > 0.5 ? '#1a3a1a' : '#1e2a1a');
+        groundGrad.addColorStop(1, '#0a1a0a');
+        ctx.fillStyle = groundGrad;
+        ctx.fill();
+
+        // Grass tufts
+        for (let i = 0; i < 60; i++) {
+          const gx = Math.random() * W;
+          const gy = groundY + 15 + Math.random() * (H - groundY - 30);
+          const gh = 4 + Math.random() * 6;
+          ctx.beginPath();
+          ctx.moveTo(gx, gy);
+          ctx.lineTo(gx - 2, gy - gh);
+          ctx.lineTo(gx + 2, gy - gh * 0.7);
+          ctx.closePath();
+          ctx.fillStyle = `rgba(${40 + Math.random() * 30}, ${80 + Math.random() * 60}, ${30 + Math.random() * 20}, 0.5)`;
+          ctx.fill();
+        }
+
+        // Seed random for consistent tree placement
+        function seededRand(seed) {
+          let s = seed;
+          return function() { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; };
+        }
+        const rand = seededRand(42);
+
+        // Generate tree positions (spread across width)
+        const treePositions = [];
+        for (let i = 0; i < treeCount; i++) {
+          const tx = 60 + (W - 120) * (i / Math.max(1, treeCount - 1)) + (rand() - 0.5) * 50;
+          const ty = groundY + 8 + Math.sin(tx * 0.008) * 12 + Math.sin(tx * 0.025) * 5;
+          const scale = 0.6 + rand() * 0.6;
+          const variation = rand();
+          treePositions.push({ x: tx, y: ty, scale, variation });
+        }
+        // Sort by y for depth
+        treePositions.sort((a, b) => a.y - b.y);
+
+        function drawTree(x, y, scale, variation) {
+          const trunkH = (30 + variation * 20) * scale;
+          const trunkW = (6 + variation * 4) * scale;
+          const canopyR = (18 + variation * 14) * scale;
+
+          // Shadow
+          ctx.beginPath();
+          ctx.ellipse(x, y + 2, canopyR * 0.7, 4 * scale, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0,0,0,0.15)';
+          ctx.fill();
+
+          // Trunk
+          const trunkGrad = ctx.createLinearGradient(x - trunkW/2, y, x + trunkW/2, y);
+          trunkGrad.addColorStop(0, '#3d2817');
+          trunkGrad.addColorStop(0.5, '#5c3a1e');
+          trunkGrad.addColorStop(1, '#3d2817');
+          ctx.fillStyle = trunkGrad;
+          ctx.fillRect(x - trunkW / 2, y - trunkH, trunkW, trunkH);
+
+          // Canopy layers
+          const layers = 3;
+          for (let l = layers - 1; l >= 0; l--) {
+            const ly = y - trunkH - canopyR * 0.4 * l;
+            const lr = canopyR * (1 - l * 0.15);
+            const greenBase = Math.round(80 + health * 100 + variation * 30);
+            const greenShade = Math.max(0, greenBase - l * 20);
+
+            ctx.beginPath();
+            ctx.arc(x + (l === 1 ? -3 : l === 2 ? 4 : 0) * scale, ly, lr, 0, Math.PI * 2);
+            ctx.fillStyle = `rgb(${20 + l * 10}, ${greenShade}, ${20 + l * 5})`;
+            ctx.fill();
+          }
+
+          // Canopy highlights
+          ctx.beginPath();
+          ctx.arc(x - canopyR * 0.3, y - trunkH - canopyR * 0.6, canopyR * 0.3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${100 + health * 80}, ${160 + health * 60}, ${60}, 0.15)`;
+          ctx.fill();
+
+          // Flowers/fruits if very healthy
+          if (health > 0.9) {
+            for (let f = 0; f < 3; f++) {
+              const fx = x + (rand() - 0.5) * canopyR * 1.4;
+              const fy = y - trunkH - canopyR * 0.3 + (rand() - 0.5) * canopyR;
+              ctx.beginPath();
+              ctx.arc(fx, fy, 2.5 * scale, 0, Math.PI * 2);
+              ctx.fillStyle = rand() > 0.5 ? '#f472b6' : '#fbbf24';
+              ctx.fill();
+            }
+          }
+        }
+
+        // Draw trees
+        treePositions.forEach(t => drawTree(t.x, t.y, t.scale, t.variation));
+
+        // Fireflies if healthy
+        if (health > 0.6) {
+          const ffCount = Math.round(health * 12);
+          for (let i = 0; i < ffCount; i++) {
+            const fx = rand() * W;
+            const fy = groundY - 40 + rand() * 80;
+            ctx.beginPath();
+            ctx.arc(fx, fy, 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(200, 255, 100, ${0.3 + rand() * 0.4})`;
+            ctx.fill();
+            // Glow
+            ctx.beginPath();
+            ctx.arc(fx, fy, 5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(200, 255, 100, 0.06)`;
+            ctx.fill();
+          }
+        }
+
+        // Caption
+        const caption = document.getElementById('forestCaption');
+        const treeTxt = treeCount === 1 ? '1 tree' : `${treeCount} trees`;
+        let mood;
+        if (avgHrs >= 10) mood = 'Overworked — the forest is dense, but take care of yourself';
+        else if (avgHrs >= 8) mood = 'Thriving — your forest is lush and healthy';
+        else if (avgHrs >= 6) mood = 'Growing — a few more hours and it\'ll flourish';
+        else if (avgHrs >= 4) mood = 'Sparse — the forest needs more attention';
+        else if (avgHrs > 0) mood = 'Barren — the trees are struggling';
+        else mood = 'Empty — no work recorded yet';
+        caption.textContent = `${treeTxt} · avg ${avgHrs.toFixed(1)}h/day (last ${sortedDates.length}d) · ${mood}`;
+      })();
 
       // Expand buttons
       document.querySelectorAll('.expand-btn').forEach(btn => {
