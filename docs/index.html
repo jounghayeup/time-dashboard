@@ -250,7 +250,7 @@
 
     <!-- Heatmap -->
     <div class="card section-gap">
-      <h3>Activity <span style="color:var(--text-muted);font-weight:300">/ 6 months</span></h3>
+      <h3>Activity <span id="hmPeriod" style="color:var(--text-muted);font-weight:300"></span></h3>
       <div style="display:flex;">
         <div class="heatmap-dow" id="hmDow"></div>
         <div style="flex:1;overflow-x:auto;">
@@ -395,8 +395,12 @@
       // === HEATMAP ===
       (function renderHeatmap() {
         const today = new Date();
-        const start = new Date(today);
-        start.setDate(start.getDate() - 182); // ~6 months
+        // Determine range: from earliest data to today, minimum 4 weeks
+        const allDates = Object.keys(dayWork).sort();
+        const earliest = allDates.length > 0 ? new Date(allDates[0]) : new Date(today);
+        const minStart = new Date(today);
+        minStart.setDate(minStart.getDate() - 27); // minimum 4 weeks
+        const start = new Date(Math.min(earliest.getTime(), minStart.getTime()));
         // Align to Sunday
         start.setDate(start.getDate() - start.getDay());
 
@@ -460,6 +464,11 @@
           span.style.width = (nextCol - mp.col) * colWidth + 'px';
           monthsRow.appendChild(span);
         });
+
+        // Dynamic period label
+        const diffDays = Math.round((today - start) / 86400000);
+        const weeks = Math.round(diffDays / 7);
+        document.getElementById('hmPeriod').textContent = weeks <= 8 ? `/ ${weeks} weeks` : `/ ${Math.round(weeks/4)} months`;
       })();
 
       // Filter setup
