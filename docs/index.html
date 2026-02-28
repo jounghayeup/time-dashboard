@@ -300,7 +300,7 @@
     <div class="timeline-section">
       <div class="card">
         <h3>Daily Timeline</h3>
-        <canvas id="dailyTimeline"></canvas>
+        <div id="timelineWrap" style="position:relative;"><canvas id="dailyTimeline"></canvas></div>
       </div>
     </div>
 
@@ -453,11 +453,11 @@
           barThickness: 28,
           maxBarThickness: 36,
         }));
+        const wrap = document.getElementById('timelineWrap');
         const canvas = document.getElementById('dailyTimeline');
         const h = fDates.length * 48 + 60;
         const clamped = Math.max(80, Math.min(500, h));
-        canvas.style.height = clamped + 'px';
-        canvas.height = clamped;
+        wrap.style.height = clamped + 'px';
         if (charts.daily) charts.daily.destroy();
         charts.daily = new Chart(canvas, {
           type: 'bar',
