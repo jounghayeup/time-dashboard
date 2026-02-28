@@ -166,6 +166,26 @@
       margin-right: 6px; align-items: center;
     }
 
+    /* Simulator */
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--accent); cursor: pointer;
+      border: 2px solid var(--bg-deep);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+    .sim-card {
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px 18px; flex: 1; min-width: 150px;
+    }
+    .sim-card .sim-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .sim-card .sim-value { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 500; }
+    .sim-card .sim-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
     /* Expand button */
     .card { position: relative; }
     .card .expand-btn {
@@ -295,6 +315,35 @@
         <button class="expand-btn" data-card="month" title="Expand">&#x26F6;</button>
         <h3>Monthly Total</h3>
         <canvas id="monthChart"></canvas>
+      </div>
+    </div>
+
+    <!-- What-If Simulator -->
+    <div class="card section-gap" style="margin-top:20px;" id="simulator">
+      <h3>What-If Simulator <span style="color:var(--text-muted);font-weight:300">/ monthly goal projection</span></h3>
+      <div id="simBody">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+          <div>
+            <label class="stat-label" style="display:block;margin-bottom:4px;">Monthly Goal</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="range" id="simGoal" min="80" max="240" value="160" step="8"
+                style="accent-color:var(--accent);width:160px;">
+              <span id="simGoalVal" style="font-family:'JetBrains Mono',monospace;font-size:14px;min-width:40px;">160h</span>
+            </div>
+          </div>
+          <div>
+            <label class="stat-label" style="display:block;margin-bottom:4px;">Daily Plan</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="range" id="simDaily" min="4" max="12" value="8" step="0.5"
+                style="accent-color:var(--accent);width:160px;">
+              <span id="simDailyVal" style="font-family:'JetBrains Mono',monospace;font-size:14px;min-width:36px;">8h</span>
+            </div>
+          </div>
+        </div>
+        <div id="simResult" style="display:flex;gap:16px;flex-wrap:wrap;"></div>
+        <div style="position:relative;height:120px;margin-top:16px;">
+          <canvas id="simChart"></canvas>
+        </div>
       </div>
     </div>
   </div>
@@ -711,6 +760,114 @@
       filter.addEventListener('change', applyFilters);
       rangeFilter.addEventListener('change', applyFilters);
       applyFilters();
+
+      // === WHAT-IF SIMULATOR ===
+      let simChart = null;
+      const simGoalEl = document.getElementById('simGoal');
+      const simDailyEl = document.getElementById('simDaily');
+      const simGoalValEl = document.getElementById('simGoalVal');
+      const simDailyValEl = document.getElementById('simDailyVal');
+      const simResultEl = document.getElementById('simResult');
+
+      function updateSim() {
+        const goalHrs = parseInt(simGoalEl.value);
+        const dailyPlan = parseFloat(simDailyEl.value);
+        simGoalValEl.textContent = goalHrs + 'h';
+        simDailyValEl.textContent = dailyPlan + 'h';
+
+        // Current month data
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = now.getMonth();
+        const monthStr = `${y}-${String(m + 1).padStart(2, '0')}`;
+        const monthEntries = entries.filter(e => e.date.startsWith(monthStr) && e.project !== '휴게');
+        const workedMin = monthEntries.reduce((s, e) => s + e.minutes, 0);
+        const workedHrs = workedMin / 60;
+
+        // Remaining workdays (Mon-Fri) this month
+        const lastDay = new Date(y, m + 1, 0).getDate();
+        let remaining = 0;
+        for (let d = now.getDate() + 1; d <= lastDay; d++) {
+          const dow = new Date(y, m, d).getDay();
+          if (dow > 0 && dow < 6) remaining++;
+        }
+
+        const projectedHrs = workedHrs + (remaining * dailyPlan);
+        const neededPerDay = remaining > 0 ? Math.max(0, (goalHrs - workedHrs) / remaining) : 0;
+        const onTrack = projectedHrs >= goalHrs;
+
+        simResultEl.innerHTML = `
+          <div class="sim-card">
+            <div class="sim-label">Done so far</div>
+            <div class="sim-value">${workedHrs.toFixed(1)}<span class="unit" style="font-size:12px;color:var(--text-secondary)">h</span></div>
+            <div class="sim-sub">${Math.round(workedHrs / goalHrs * 100)}% of goal</div>
+          </div>
+          <div class="sim-card">
+            <div class="sim-label">Remaining days</div>
+            <div class="sim-value">${remaining}<span class="unit" style="font-size:12px;color:var(--text-secondary)"> workdays</span></div>
+            <div class="sim-sub">this month</div>
+          </div>
+          <div class="sim-card">
+            <div class="sim-label">Projected total</div>
+            <div class="sim-value" style="color:${onTrack ? '#39d353' : '#f47272'}">${projectedHrs.toFixed(1)}<span class="unit" style="font-size:12px;color:var(--text-secondary)">h</span></div>
+            <div class="sim-sub">${onTrack ? 'on track' : Math.abs(goalHrs - projectedHrs).toFixed(1) + 'h short'}</div>
+          </div>
+          <div class="sim-card">
+            <div class="sim-label">Need per day</div>
+            <div class="sim-value" style="color:${neededPerDay <= 8 ? '#39d353' : neededPerDay <= 10 ? '#fbbf24' : '#f47272'}">${neededPerDay.toFixed(1)}<span class="unit" style="font-size:12px;color:var(--text-secondary)">h</span></div>
+            <div class="sim-sub">to hit ${goalHrs}h goal</div>
+          </div>
+        `;
+
+        // Progress bar chart
+        const actual = Math.min(workedHrs, goalHrs);
+        const projected = Math.min(Math.max(projectedHrs - workedHrs, 0), goalHrs - actual);
+        const gap = Math.max(goalHrs - actual - projected, 0);
+
+        const simCfg = {
+          type: 'bar',
+          data: {
+            labels: ['Progress'],
+            datasets: [
+              { label: 'Worked', data: [actual], backgroundColor: '#6366f1', borderRadius: 3, borderSkipped: false, barThickness: 28 },
+              { label: 'Projected', data: [projected], backgroundColor: 'rgba(99,102,241,0.3)', borderRadius: 3, borderSkipped: false, barThickness: 28 },
+              { label: 'Remaining', data: [gap], backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 3, borderSkipped: false, barThickness: 28 },
+            ]
+          },
+          options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            scales: {
+              x: { stacked: true, min: 0, max: goalHrs, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { stepSize: 20, callback: v => v + 'h', font: { family: "'JetBrains Mono', monospace", size: 11 } } },
+              y: { stacked: true, display: false }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(10,10,15,0.95)', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1,
+                cornerRadius: 8, padding: 10,
+                bodyFont: { family: "'JetBrains Mono', monospace", size: 12 },
+                callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(1)}h` }
+              },
+              annotation: {
+                annotations: {
+                  goal: {
+                    type: 'line', xMin: goalHrs, xMax: goalHrs,
+                    borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2, borderDash: [4, 3],
+                    label: { display: true, content: goalHrs + 'h', position: 'end', backgroundColor: 'transparent', color: 'rgba(255,255,255,0.4)', font: { family: "'JetBrains Mono', monospace", size: 10 }, padding: 2 }
+                  }
+                }
+              }
+            }
+          }
+        };
+
+        if (simChart) simChart.destroy();
+        simChart = new Chart(document.getElementById('simChart'), simCfg);
+      }
+
+      simGoalEl.addEventListener('input', updateSim);
+      simDailyEl.addEventListener('input', updateSim);
+      updateSim();
 
       // Expand buttons
       document.querySelectorAll('.expand-btn').forEach(btn => {
