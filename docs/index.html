@@ -450,11 +450,14 @@
           backgroundColor: color(p),
           borderRadius: 3,
           borderSkipped: false,
+          barThickness: 28,
+          maxBarThickness: 36,
         }));
         const canvas = document.getElementById('dailyTimeline');
-        const h = Math.max(100, fDates.length * 44 + 40);
-        canvas.style.height = Math.min(600, h) + 'px';
-        canvas.height = Math.min(600, h);
+        const h = fDates.length * 48 + 60;
+        const clamped = Math.max(80, Math.min(500, h));
+        canvas.style.height = clamped + 'px';
+        canvas.height = clamped;
         if (charts.daily) charts.daily.destroy();
         charts.daily = new Chart(canvas, {
           type: 'bar',
