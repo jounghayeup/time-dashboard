@@ -29,6 +29,21 @@
       "date": "2026-02-27",
       "project": "OnBoarding",
       "minutes": 45
+    },
+    {
+      "date": "2026-02-28",
+      "project": "Daily Kickoff",
+      "minutes": 31
+    },
+    {
+      "date": "2026-02-28",
+      "project": "3DVS",
+      "minutes": 284
+    },
+    {
+      "date": "2026-02-28",
+      "project": "휴게",
+      "minutes": 73
     }
   ]
 }
