@@ -69,6 +69,26 @@
       "date": "2026-03-03",
       "project": "휴게",
       "minutes": 129
+    },
+    {
+      "date": "2026-03-04",
+      "project": "HMC EV",
+      "minutes": 454
+    },
+    {
+      "date": "2026-03-04",
+      "project": "휴게",
+      "minutes": 342
+    },
+    {
+      "date": "2026-03-04",
+      "project": "Daily Kickoff",
+      "minutes": 70
+    },
+    {
+      "date": "2026-03-04",
+      "project": "일반업무",
+      "minutes": 27
     }
   ]
 }
