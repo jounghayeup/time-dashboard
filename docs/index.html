@@ -213,6 +213,174 @@
     .stat-card:nth-child(4) { animation-delay: 0.15s; }
     .stat-card:nth-child(5) { animation-delay: 0.2s; }
 
+    /* ===== TODAY SECTION ===== */
+    #todayCard {
+      background: linear-gradient(135deg, rgba(99,102,241,0.07) 0%, rgba(244,114,182,0.03) 100%);
+      border-color: rgba(99,102,241,0.18);
+      position: relative;
+      overflow: hidden;
+    }
+    #todayCard::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.5) 30%, rgba(244,114,182,0.3) 70%, transparent);
+      pointer-events: none;
+    }
+
+    .today-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .today-header h3 { margin: 0; }
+
+    .today-status-pill {
+      font-size: 10px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid;
+      transition: all 0.4s;
+    }
+
+    .today-layout {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 36px;
+      align-items: start;
+    }
+
+    /* Arc */
+    .today-arc-wrap { display: flex; align-items: center; justify-content: center; }
+    .today-arc-svg { width: 170px; height: 170px; overflow: visible; }
+    .arc-track {
+      fill: none;
+      stroke: rgba(255,255,255,0.05);
+      stroke-width: 9;
+    }
+    .arc-progress {
+      fill: none;
+      stroke-width: 9;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      stroke-dasharray: 502.65 502.65;
+      stroke-dashoffset: 502.65;
+      transition: stroke-dashoffset 1.4s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.4s;
+    }
+    .arc-center-value {
+      fill: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 20px;
+      font-weight: 500;
+    }
+    .arc-center-label {
+      fill: var(--text-muted);
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+    .arc-center-goal {
+      fill: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+    }
+
+    /* Right */
+    .today-right { display: flex; flex-direction: column; gap: 18px; padding-top: 4px; }
+
+    /* Stacked bar */
+    .today-bar-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 500; }
+    .today-bar {
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      display: flex;
+      background: rgba(255,255,255,0.04);
+      margin-bottom: 4px;
+      cursor: default;
+    }
+    .today-bar-seg {
+      height: 100%;
+      transition: opacity 0.2s, filter 0.2s, width 1s cubic-bezier(0.22, 1, 0.36, 1);
+      cursor: pointer;
+      position: relative;
+    }
+    .today-bar-seg:first-child { border-radius: 5px 0 0 5px; }
+    .today-bar-seg:last-child  { border-radius: 0 5px 5px 0; }
+    .today-bar-seg.dim { opacity: 0.2; }
+    .today-bar-seg.highlight { filter: brightness(1.35) saturate(1.2); }
+
+    /* Project rows */
+    .today-project-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      transition: background 0.18s, border-color 0.18s;
+      cursor: pointer;
+    }
+    .today-project-row:hover, .today-project-row.highlight {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.07);
+    }
+    .today-proj-dot {
+      width: 9px; height: 9px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .today-proj-name {
+      font-size: 13px; font-weight: 500;
+      color: var(--text-primary);
+      flex: 1; min-width: 0;
+    }
+    .today-proj-minibar {
+      width: 72px; height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .today-proj-minibar-fill {
+      height: 100%;
+      border-radius: 2px;
+      width: 0%;
+      transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .today-proj-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-width: 52px;
+      text-align: right;
+    }
+
+    /* Summary row */
+    .today-summary {
+      display: flex;
+      gap: 20px;
+      padding-top: 4px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .today-summary-item { display: flex; flex-direction: column; gap: 2px; }
+    .today-summary-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+    .today-summary-value { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text-primary); }
+
+    @media (max-width: 700px) {
+      .today-layout { grid-template-columns: 1fr; }
+      .today-arc-wrap { justify-content: flex-start; }
+    }
+
     @media (max-width: 900px) {
       .grid-3 { grid-template-columns: 1fr; }
       .container { padding: 24px 16px 60px; }
@@ -247,6 +415,35 @@
 
     <div class="stats" id="statsRow"></div>
     <div class="legend-row" id="legendRow"></div>
+
+    <!-- Today Section -->
+    <div class="card section-gap" id="todayCard">
+      <div class="today-header">
+        <h3 style="margin:0">Today <span id="todayDate" style="color:var(--text-muted);font-weight:300"></span></h3>
+        <div id="todayStatus" class="today-status-pill"></div>
+      </div>
+      <div class="today-layout">
+        <!-- Arc Progress -->
+        <div class="today-arc-wrap">
+          <svg class="today-arc-svg" viewBox="0 0 200 200">
+            <circle class="arc-track" cx="100" cy="100" r="80" />
+            <circle class="arc-progress" id="arcProgress" cx="100" cy="100" r="80" />
+            <text class="arc-center-value" id="arcCenterValue" x="100" y="92" text-anchor="middle">—</text>
+            <text class="arc-center-label" x="100" y="112" text-anchor="middle">work today</text>
+            <text class="arc-center-goal" id="arcCenterGoal" x="100" y="130" text-anchor="middle"></text>
+          </svg>
+        </div>
+        <!-- Right: Bar + Projects -->
+        <div class="today-right">
+          <div>
+            <div class="today-bar-label">Time Breakdown</div>
+            <div class="today-bar" id="todayBar"></div>
+          </div>
+          <div id="todayProjects"></div>
+          <div class="today-summary" id="todaySummary"></div>
+        </div>
+      </div>
+    </div>
 
     <!-- Heatmap -->
     <div class="card section-gap">
@@ -348,6 +545,7 @@
       'GENERAL':       '#a3e635',
       '3DVS':          '#f472b6',
       'HMC EV':        '#60a5fa',
+      '클레톡':         '#f97316',
       '휴게':           '#fbbf24',
       'OnBoarding':    '#c084fc',
     };
@@ -500,6 +698,133 @@
         });
       }
       renderLegend();
+
+      // === TODAY SECTION ===
+      (function renderToday() {
+        const today = new Date();
+        const todayStr = dateStr(today);
+        const todayEntries = entries.filter(e => e.date === todayStr);
+        const card = document.getElementById('todayCard');
+
+        if (todayEntries.length === 0) {
+          card.style.display = 'none';
+          return;
+        }
+
+        const workEntries = todayEntries.filter(e => e.project !== '휴게');
+        const breakEntries = todayEntries.filter(e => e.project === '휴게');
+        const workMin = workEntries.reduce((s, e) => s + e.minutes, 0);
+        const breakMin = breakEntries.reduce((s, e) => s + e.minutes, 0);
+        const totalMin = workMin + breakMin;
+        const workHrs = workMin / 60;
+
+        // Date label
+        document.getElementById('todayDate').textContent =
+          '/ ' + today.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+
+        // Status pill
+        const statusEl = document.getElementById('todayStatus');
+        let statusText, statusColor, statusBg, statusBorder;
+        if (workHrs >= 10)      { statusText = 'Overtime';    statusColor = '#f472b6'; statusBg = 'rgba(244,114,182,0.1)'; statusBorder = 'rgba(244,114,182,0.35)'; }
+        else if (workHrs >= 8)  { statusText = 'Goal Met ✓'; statusColor = '#39d353'; statusBg = 'rgba(57,211,83,0.1)';   statusBorder = 'rgba(57,211,83,0.35)'; }
+        else if (workHrs >= 5)  { statusText = 'On Track';   statusColor = '#6366f1'; statusBg = 'rgba(99,102,241,0.1)'; statusBorder = 'rgba(99,102,241,0.35)'; }
+        else                    { statusText = 'In Progress'; statusColor = '#fbbf24'; statusBg = 'rgba(251,191,36,0.08)'; statusBorder = 'rgba(251,191,36,0.3)'; }
+        statusEl.textContent = statusText;
+        statusEl.style.cssText += `color:${statusColor};background:${statusBg};border-color:${statusBorder}`;
+
+        // Arc
+        const CIRC = 2 * Math.PI * 80; // 502.65
+        const arcEl = document.getElementById('arcProgress');
+        const progress = Math.min(1, workHrs / GOAL_HOURS);
+        const arcColor = workHrs >= 10 ? '#f472b6' : workHrs >= 8 ? '#39d353' : '#6366f1';
+        arcEl.style.stroke = arcColor;
+        if (workHrs >= 8) arcEl.style.filter = `drop-shadow(0 0 6px ${arcColor}55)`;
+        setTimeout(() => { arcEl.style.strokeDashoffset = CIRC * (1 - progress); }, 80);
+
+        const valEl = document.getElementById('arcCenterValue');
+        const goalEl = document.getElementById('arcCenterGoal');
+        valEl.textContent = fmtHM(workMin);
+        if (workHrs >= GOAL_HOURS) {
+          goalEl.textContent = `+${fmtHM(workMin - GOAL_HOURS * 60)} over`;
+          goalEl.style.fill = arcColor;
+        } else {
+          goalEl.textContent = `${Math.round(progress * 100)}% of 8h`;
+        }
+
+        // Stacked bar — show all (incl break), animate widths from 0
+        const bar = document.getElementById('todayBar');
+        const sortedForBar = [...todayEntries].sort((a, b) => b.minutes - a.minutes);
+        bar.innerHTML = sortedForBar.map(e =>
+          `<div class="today-bar-seg" style="width:0%;background:${color(e.project)};" data-project="${e.project}" title="${e.project}: ${fmtHM(e.minutes)}"></div>`
+        ).join('');
+        setTimeout(() => {
+          bar.querySelectorAll('.today-bar-seg').forEach(seg => {
+            const entry = todayEntries.find(e => e.project === seg.dataset.project);
+            seg.style.width = (entry.minutes / totalMin * 100).toFixed(1) + '%';
+          });
+        }, 100);
+
+        // Project rows
+        const projEl = document.getElementById('todayProjects');
+        const sortedProjs = [...todayEntries].sort((a, b) => b.minutes - a.minutes);
+        projEl.innerHTML = sortedProjs.map(e => {
+          const pct = Math.round(e.minutes / Math.max(workMin, 1) * 100);
+          const isBreak = e.project === '휴게';
+          return `<div class="today-project-row" data-project="${e.project}">
+            <div class="today-proj-dot" style="background:${color(e.project)}"></div>
+            <div class="today-proj-name">${e.project}${isBreak ? ' <span style="font-size:10px;color:var(--text-muted);font-weight:400">(break)</span>' : ''}</div>
+            <div class="today-proj-minibar"><div class="today-proj-minibar-fill" style="background:${color(e.project)}" data-pct="${isBreak ? 0 : pct}"></div></div>
+            <div class="today-proj-time">${fmtHM(e.minutes)}</div>
+          </div>`;
+        }).join('');
+        setTimeout(() => {
+          projEl.querySelectorAll('.today-proj-minibar-fill').forEach(el => {
+            el.style.width = el.dataset.pct + '%';
+          });
+        }, 200);
+
+        // Summary row
+        const goalDiff = workMin - GOAL_HOURS * 60;
+        const goalDiffText = goalDiff >= 0
+          ? `<span style="color:#39d353">+${fmtHM(goalDiff)} over</span>`
+          : `<span style="color:var(--text-secondary)">${fmtHM(Math.abs(goalDiff))} to go</span>`;
+        document.getElementById('todaySummary').innerHTML = `
+          <div class="today-summary-item">
+            <div class="today-summary-label">Work</div>
+            <div class="today-summary-value">${fmtHM(workMin)}</div>
+          </div>
+          <div class="today-summary-item">
+            <div class="today-summary-label">Break</div>
+            <div class="today-summary-value">${fmtHM(breakMin)}</div>
+          </div>
+          <div class="today-summary-item">
+            <div class="today-summary-label">Ratio</div>
+            <div class="today-summary-value" style="font-size:12px">${totalMin > 0 ? Math.round(breakMin/totalMin*100) : 0}% break</div>
+          </div>
+          <div class="today-summary-item">
+            <div class="today-summary-label">vs Goal</div>
+            <div class="today-summary-value" style="font-size:12px">${goalDiffText}</div>
+          </div>
+        `;
+
+        // Hover interactions
+        const rows = projEl.querySelectorAll('.today-project-row');
+        const barSegs = bar.querySelectorAll('.today-bar-seg');
+
+        function highlight(proj) {
+          rows.forEach(r => r.classList.toggle('highlight', r.dataset.project === proj));
+          barSegs.forEach(s => {
+            s.classList.toggle('highlight', s.dataset.project === proj);
+            s.classList.toggle('dim', s.dataset.project !== proj);
+          });
+        }
+        function clearHL() {
+          rows.forEach(r => r.classList.remove('highlight'));
+          barSegs.forEach(s => s.classList.remove('highlight', 'dim'));
+        }
+        rows.forEach(r => { r.addEventListener('mouseenter', () => highlight(r.dataset.project)); r.addEventListener('mouseleave', clearHL); });
+        barSegs.forEach(s => { s.addEventListener('mouseenter', () => highlight(s.dataset.project)); s.addEventListener('mouseleave', clearHL); });
+      })();
 
       // Stats
       function renderStats(filtered) {
