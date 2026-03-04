@@ -768,12 +768,12 @@
         const projEl = document.getElementById('todayProjects');
         const sortedProjs = [...todayEntries].sort((a, b) => b.minutes - a.minutes);
         projEl.innerHTML = sortedProjs.map(e => {
-          const pct = Math.round(e.minutes / Math.max(workMin, 1) * 100);
+          const pct = Math.round(e.minutes / Math.max(totalMin, 1) * 100);
           const isBreak = e.project === '휴게';
           return `<div class="today-project-row" data-project="${e.project}">
             <div class="today-proj-dot" style="background:${color(e.project)}"></div>
             <div class="today-proj-name">${e.project}${isBreak ? ' <span style="font-size:10px;color:var(--text-muted);font-weight:400">(break)</span>' : ''}</div>
-            <div class="today-proj-minibar"><div class="today-proj-minibar-fill" style="background:${color(e.project)}" data-pct="${isBreak ? 0 : pct}"></div></div>
+            <div class="today-proj-minibar"><div class="today-proj-minibar-fill" style="background:${color(e.project)}" data-pct="${pct}"></div></div>
             <div class="today-proj-time">${fmtHM(e.minutes)}</div>
           </div>`;
         }).join('');
