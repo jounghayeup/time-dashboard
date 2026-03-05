@@ -768,10 +768,17 @@
 
         const today = new Date();
         const todayStr = dateStr(today);
-        const todayEntries = entries.filter(e => e.date === todayStr);
         const card = document.getElementById('todayCard');
 
-        if (todayEntries.length === 0) { card.style.display = 'none'; return; }
+        const allDates = [...new Set(entries.map(e => e.date))].sort();
+        const targetStr = allDates.includes(todayStr)
+          ? todayStr
+          : allDates[allDates.length - 1];
+
+        if (!targetStr) { card.style.display = 'none'; return; }
+
+        const isToday = targetStr === todayStr;
+        const todayEntries = entries.filter(e => e.date === targetStr);
 
         const workEntries = todayEntries.filter(e => e.project !== '휴게');
         const breakMin = todayEntries.filter(e => e.project === '휴게').reduce((s, e) => s + e.minutes, 0);
@@ -782,8 +789,10 @@
         const projCount = workEntries.reduce((acc, e) => (acc.add(e.project), acc), new Set()).size;
 
         // Date
+        const targetDate = new Date(targetStr + 'T00:00:00');
+        document.querySelector('.today-super-label').textContent = isToday ? "Today's Work" : 'Latest Work';
         document.getElementById('todayDate').textContent =
-          today.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+          targetDate.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
 
         // Status pill
         const statusEl = document.getElementById('todayStatus');
