@@ -215,58 +215,61 @@
 
     /* ===== TODAY SECTION ===== */
     #todayCard {
-      background: linear-gradient(135deg, rgba(99,102,241,0.07) 0%, rgba(244,114,182,0.03) 100%);
-      border-color: rgba(99,102,241,0.18);
+      background: rgba(255,255,255,0.025);
+      border-color: rgba(255,255,255,0.07);
       position: relative;
-      overflow: hidden;
-    }
-    #todayCard::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.5) 30%, rgba(244,114,182,0.3) 70%, transparent);
-      pointer-events: none;
     }
 
     .today-header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       margin-bottom: 24px;
     }
-    .today-header h3 { margin: 0; }
-
-    .today-status-pill {
+    .today-super-label {
       font-size: 10px;
       font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.8px;
+      margin-bottom: 3px;
+    }
+    .today-date-str {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+    }
+    .today-status-pill {
+      font-size: 10px;
+      font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
       text-transform: uppercase;
-      letter-spacing: 2px;
+      letter-spacing: 1.8px;
       padding: 5px 14px;
       border-radius: 20px;
       border: 1px solid;
-      transition: all 0.4s;
+      margin-top: 2px;
     }
 
-    .today-layout {
+    /* Top: ring + legend */
+    .today-top {
       display: grid;
-      grid-template-columns: 180px 1fr;
-      gap: 36px;
-      align-items: start;
+      grid-template-columns: 170px 1fr;
+      gap: 28px;
+      align-items: center;
+      margin-bottom: 20px;
     }
-
-    /* Arc */
     .today-arc-wrap { display: flex; align-items: center; justify-content: center; }
-    .today-arc-svg { width: 170px; height: 170px; overflow: visible; }
+    .today-arc-svg { width: 160px; height: 160px; overflow: visible; }
     .arc-track {
       fill: none;
       stroke: rgba(255,255,255,0.05);
-      stroke-width: 9;
+      stroke-width: 14;
     }
     .arc-progress {
       fill: none;
-      stroke-width: 9;
+      stroke-width: 14;
       stroke-linecap: round;
       transform: rotate(-90deg);
       transform-origin: center;
@@ -277,7 +280,7 @@
     .arc-center-value {
       fill: var(--text-primary);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 500;
     }
     .arc-center-label {
@@ -293,96 +296,144 @@
       font-size: 11px;
     }
 
-    /* Right */
-    .today-right { display: flex; flex-direction: column; gap: 18px; padding-top: 4px; }
+    /* Legend */
+    .today-legend { display: flex; flex-direction: column; gap: 16px; }
+    .today-legend-item { display: flex; align-items: center; gap: 12px; }
+    .today-legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .today-legend-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .today-legend-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
 
-    /* Stacked bar */
-    .today-bar-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 500; }
-    .today-bar {
-      height: 10px;
-      border-radius: 5px;
-      overflow: hidden;
-      display: flex;
+    /* Mini stat cards */
+    .today-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .today-stat-card {
       background: rgba(255,255,255,0.04);
-      margin-bottom: 4px;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 14px 16px;
+      transition: background 0.2s, border-color 0.2s;
       cursor: default;
     }
-    .today-bar-seg {
-      height: 100%;
-      transition: opacity 0.2s, filter 0.2s, width 1s cubic-bezier(0.22, 1, 0.36, 1);
-      cursor: pointer;
-      position: relative;
+    .today-stat-card:hover {
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(255,255,255,0.1);
     }
-    .today-bar-seg:first-child { border-radius: 5px 0 0 5px; }
-    .today-bar-seg:last-child  { border-radius: 0 5px 5px 0; }
-    .today-bar-seg.dim { opacity: 0.2; }
-    .today-bar-seg.highlight { filter: brightness(1.35) saturate(1.2); }
+    .today-stat-icon { font-size: 17px; margin-bottom: 8px; display: block; }
+    .today-stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .today-stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 500;
+    }
 
-    /* Project rows */
-    .today-project-row {
+    /* Workout-style project list */
+    .today-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 10px;
+    }
+    .today-workout-item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 9px 12px;
-      border-radius: 10px;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
       border: 1px solid transparent;
-      transition: background 0.18s, border-color 0.18s;
+      background: rgba(255,255,255,0.03);
+      margin-bottom: 8px;
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.18s, border-color 0.18s;
     }
-    .today-project-row:hover, .today-project-row.highlight {
-      background: rgba(255,255,255,0.04);
-      border-color: rgba(255,255,255,0.07);
+    .today-workout-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08); }
+    .today-workout-item.highlight { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08); }
+    .today-workout-item.dim { opacity: 0.35; }
+    /* Left color bar */
+    .today-workout-item::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--item-color, #6366f1);
     }
-    .today-proj-dot {
-      width: 9px; height: 9px;
-      border-radius: 3px;
+    .today-workout-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
       flex-shrink: 0;
+      background: var(--item-bg);
     }
-    .today-proj-name {
-      font-size: 13px; font-weight: 500;
+    .today-workout-info { flex: 1; min-width: 0; }
+    .today-workout-name {
+      font-size: 13px;
+      font-weight: 600;
       color: var(--text-primary);
-      flex: 1; min-width: 0;
+      margin-bottom: 5px;
     }
-    .today-proj-minibar {
-      width: 72px; height: 3px;
-      background: rgba(255,255,255,0.06);
+    .today-workout-bar {
+      width: 100%; height: 3px;
+      background: rgba(255,255,255,0.05);
       border-radius: 2px;
       overflow: hidden;
-      flex-shrink: 0;
     }
-    .today-proj-minibar-fill {
+    .today-workout-bar-fill {
       height: 100%;
       border-radius: 2px;
-      width: var(--pct, 0%);
-      animation: minibarGrow 1s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+      background: var(--item-color, #6366f1);
+      width: var(--fill-w, 0%);
+      animation: barGrow 1s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
-    @keyframes minibarGrow {
+    @keyframes barGrow {
       from { width: 0%; }
-      to   { width: var(--pct, 0%); }
+      to   { width: var(--fill-w, 0%); }
     }
-    .today-proj-time {
+    .today-workout-time {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--text-secondary);
-      min-width: 52px;
-      text-align: right;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      flex-shrink: 0;
     }
-
-    /* Summary row */
-    .today-summary {
-      display: flex;
-      gap: 20px;
-      padding-top: 4px;
-      border-top: 1px solid var(--border);
-      flex-wrap: wrap;
-    }
-    .today-summary-item { display: flex; flex-direction: column; gap: 2px; }
-    .today-summary-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
-    .today-summary-value { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--text-primary); }
 
     @media (max-width: 700px) {
-      .today-layout { grid-template-columns: 1fr; }
-      .today-arc-wrap { justify-content: flex-start; }
+      .today-top { grid-template-columns: 1fr; }
+      .today-stats-row { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 900px) {
@@ -423,11 +474,15 @@
     <!-- Today Section -->
     <div class="card section-gap" id="todayCard">
       <div class="today-header">
-        <h3 style="margin:0">Today <span id="todayDate" style="color:var(--text-muted);font-weight:300"></span></h3>
+        <div>
+          <div class="today-super-label">Today's Work</div>
+          <div class="today-date-str" id="todayDate"></div>
+        </div>
         <div id="todayStatus" class="today-status-pill"></div>
       </div>
-      <div class="today-layout">
-        <!-- Arc Progress -->
+
+      <!-- Ring + Legend -->
+      <div class="today-top">
         <div class="today-arc-wrap">
           <svg class="today-arc-svg" viewBox="0 0 200 200">
             <circle class="arc-track" cx="100" cy="100" r="80" />
@@ -437,16 +492,15 @@
             <text class="arc-center-goal" id="arcCenterGoal" x="100" y="130" text-anchor="middle"></text>
           </svg>
         </div>
-        <!-- Right: Bar + Projects -->
-        <div class="today-right">
-          <div>
-            <div class="today-bar-label">Time Breakdown</div>
-            <div class="today-bar" id="todayBar"></div>
-          </div>
-          <div id="todayProjects"></div>
-          <div class="today-summary" id="todaySummary"></div>
-        </div>
+        <div class="today-legend" id="todayLegend"></div>
       </div>
+
+      <!-- Mini Stat Cards -->
+      <div class="today-stats-row" id="todayStatsRow"></div>
+
+      <!-- Project List -->
+      <div class="today-section-title">Today's Projects</div>
+      <div id="todayProjects"></div>
     </div>
 
     <!-- Heatmap -->
@@ -705,124 +759,120 @@
 
       // === TODAY SECTION ===
       (function renderToday() {
+        const PROJECT_ICONS = {
+          'Daily Kickoff': '☀️', 'GENERAL': '📋', '3DVS': '🎮',
+          'HMC EV': '⚡', '클레톡': '💬', '휴게': '☕',
+          'OnBoarding': '🚀', '미팅': '🗣️', '일반업무': '📝',
+        };
+        const icon = p => PROJECT_ICONS[p] || '🔧';
+
         const today = new Date();
         const todayStr = dateStr(today);
         const todayEntries = entries.filter(e => e.date === todayStr);
         const card = document.getElementById('todayCard');
 
-        if (todayEntries.length === 0) {
-          card.style.display = 'none';
-          return;
-        }
+        if (todayEntries.length === 0) { card.style.display = 'none'; return; }
 
         const workEntries = todayEntries.filter(e => e.project !== '휴게');
-        const breakEntries = todayEntries.filter(e => e.project === '휴게');
+        const breakMin = todayEntries.filter(e => e.project === '휴게').reduce((s, e) => s + e.minutes, 0);
         const workMin = workEntries.reduce((s, e) => s + e.minutes, 0);
-        const breakMin = breakEntries.reduce((s, e) => s + e.minutes, 0);
         const totalMin = workMin + breakMin;
         const workHrs = workMin / 60;
+        const effPct = totalMin > 0 ? Math.round(workMin / totalMin * 100) : 0;
+        const projCount = workEntries.reduce((acc, e) => (acc.add(e.project), acc), new Set()).size;
 
-        // Date label
+        // Date
         document.getElementById('todayDate').textContent =
-          '/ ' + today.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
+          today.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
 
         // Status pill
         const statusEl = document.getElementById('todayStatus');
-        let statusText, statusColor, statusBg, statusBorder;
-        if (workHrs >= 10)      { statusText = 'Overtime';    statusColor = '#f472b6'; statusBg = 'rgba(244,114,182,0.1)'; statusBorder = 'rgba(244,114,182,0.35)'; }
-        else if (workHrs >= 8)  { statusText = 'Goal Met ✓'; statusColor = '#39d353'; statusBg = 'rgba(57,211,83,0.1)';   statusBorder = 'rgba(57,211,83,0.35)'; }
-        else if (workHrs >= 5)  { statusText = 'On Track';   statusColor = '#6366f1'; statusBg = 'rgba(99,102,241,0.1)'; statusBorder = 'rgba(99,102,241,0.35)'; }
-        else                    { statusText = 'In Progress'; statusColor = '#fbbf24'; statusBg = 'rgba(251,191,36,0.08)'; statusBorder = 'rgba(251,191,36,0.3)'; }
-        statusEl.textContent = statusText;
-        statusEl.style.cssText += `color:${statusColor};background:${statusBg};border-color:${statusBorder}`;
+        let sText, sColor, sBg, sBorder;
+        if (workHrs >= 10)     { sText='Overtime';    sColor='#f472b6'; sBg='rgba(244,114,182,0.1)'; sBorder='rgba(244,114,182,0.35)'; }
+        else if (workHrs >= 8) { sText='Goal Met ✓'; sColor='#4ade80'; sBg='rgba(74,222,128,0.1)';  sBorder='rgba(74,222,128,0.35)'; }
+        else if (workHrs >= 5) { sText='On Track';   sColor='#6366f1'; sBg='rgba(99,102,241,0.1)';  sBorder='rgba(99,102,241,0.35)'; }
+        else                   { sText='In Progress'; sColor='#fbbf24'; sBg='rgba(251,191,36,0.08)'; sBorder='rgba(251,191,36,0.3)'; }
+        statusEl.textContent = sText;
+        Object.assign(statusEl.style, { color: sColor, background: sBg, borderColor: sBorder });
 
-        // Arc
-        const CIRC = 2 * Math.PI * 80; // 502.65
+        // Arc ring
+        const CIRC = 2 * Math.PI * 80;
         const arcEl = document.getElementById('arcProgress');
-        const progress = Math.min(1, workHrs / GOAL_HOURS);
-        const arcColor = workHrs >= 10 ? '#f472b6' : workHrs >= 8 ? '#39d353' : '#6366f1';
+        const arcColor = workHrs >= 10 ? '#f472b6' : workHrs >= 8 ? '#4ade80' : '#6366f1';
         arcEl.style.stroke = arcColor;
-        if (workHrs >= 8) arcEl.style.filter = `drop-shadow(0 0 6px ${arcColor}55)`;
-        setTimeout(() => { arcEl.style.strokeDashoffset = CIRC * (1 - progress); }, 80);
+        if (workHrs >= 8) arcEl.style.filter = `drop-shadow(0 0 8px ${arcColor}60)`;
+        setTimeout(() => { arcEl.style.strokeDashoffset = CIRC * (1 - Math.min(1, workHrs / GOAL_HOURS)); }, 80);
 
-        const valEl = document.getElementById('arcCenterValue');
+        document.getElementById('arcCenterValue').textContent = fmtHM(workMin);
         const goalEl = document.getElementById('arcCenterGoal');
-        valEl.textContent = fmtHM(workMin);
         if (workHrs >= GOAL_HOURS) {
           goalEl.textContent = `+${fmtHM(workMin - GOAL_HOURS * 60)} over`;
           goalEl.style.fill = arcColor;
         } else {
-          goalEl.textContent = `${Math.round(progress * 100)}% of 8h`;
+          goalEl.textContent = `${Math.round(workHrs / GOAL_HOURS * 100)}% of 8h`;
         }
 
-        // Stacked bar — show all (incl break), animate widths from 0
-        const bar = document.getElementById('todayBar');
-        const sortedForBar = [...todayEntries].sort((a, b) => b.minutes - a.minutes);
-        bar.innerHTML = sortedForBar.map(e =>
-          `<div class="today-bar-seg" style="width:0%;background:${color(e.project)};" data-project="${e.project}" title="${e.project}: ${fmtHM(e.minutes)}"></div>`
-        ).join('');
-        setTimeout(() => {
-          bar.querySelectorAll('.today-bar-seg').forEach(seg => {
-            const entry = todayEntries.find(e => e.project === seg.dataset.project);
-            seg.style.width = (entry.minutes / totalMin * 100).toFixed(1) + '%';
-          });
-        }, 100);
+        // Legend (right of ring)
+        document.getElementById('todayLegend').innerHTML = [
+          { dot: arcColor,   label: 'Work Goal',  value: `${fmtHM(workMin)} / 8h` },
+          { dot: '#4ade80',  label: 'Efficiency', value: `${effPct}% active` },
+          { dot: '#22d3ee',  label: 'Projects',   value: `${projCount} today` },
+        ].map(item => `
+          <div class="today-legend-item">
+            <div class="today-legend-dot" style="background:${item.dot};box-shadow:0 0 6px ${item.dot}60"></div>
+            <div>
+              <div class="today-legend-label">${item.label}</div>
+              <div class="today-legend-value">${item.value}</div>
+            </div>
+          </div>`).join('');
 
-        // Project rows
+        // Mini stat cards
+        const goalDiff = workMin - GOAL_HOURS * 60;
+        const goalDiffStr = goalDiff >= 0 ? `+${fmtHM(goalDiff)}` : `-${fmtHM(Math.abs(goalDiff))}`;
+        const goalDiffColor = goalDiff >= 0 ? '#4ade80' : '#f87171';
+        document.getElementById('todayStatsRow').innerHTML = [
+          { icon: '🕐', value: fmtHM(workMin),  label: 'Work Time',  color: '' },
+          { icon: '☕', value: fmtHM(breakMin), label: 'Break Time', color: '' },
+          { icon: '⚡', value: goalDiffStr,      label: 'vs 8h Goal', color: goalDiffColor },
+        ].map(s => `
+          <div class="today-stat-card">
+            <span class="today-stat-icon">${s.icon}</span>
+            <div class="today-stat-value"${s.color ? ` style="color:${s.color}"` : ''}>${s.value}</div>
+            <div class="today-stat-label">${s.label}</div>
+          </div>`).join('');
+
+        // Workout-style project list
+        const sorted = [...todayEntries].sort((a, b) => b.minutes - a.minutes);
         const projEl = document.getElementById('todayProjects');
-        const sortedProjs = [...todayEntries].sort((a, b) => b.minutes - a.minutes);
-        projEl.innerHTML = sortedProjs.map(e => {
+        projEl.innerHTML = sorted.map(e => {
           const pct = Math.round(e.minutes / Math.max(totalMin, 1) * 100);
+          const c = color(e.project);
+          const bg = c + '18';
           const isBreak = e.project === '휴게';
-          return `<div class="today-project-row" data-project="${e.project}">
-            <div class="today-proj-dot" style="background:${color(e.project)}"></div>
-            <div class="today-proj-name">${e.project}${isBreak ? ' <span style="font-size:10px;color:var(--text-muted);font-weight:400">(break)</span>' : ''}</div>
-            <div class="today-proj-minibar"><div class="today-proj-minibar-fill" style="background:${color(e.project)};--pct:${pct}%"></div></div>
-            <div class="today-proj-time">${fmtHM(e.minutes)}</div>
+          return `<div class="today-workout-item" data-project="${e.project}"
+            style="--item-color:${c};--item-bg:${bg};--fill-w:${pct}%">
+            <div class="today-workout-icon">${icon(e.project)}</div>
+            <div class="today-workout-info">
+              <div class="today-workout-name">${e.project}${isBreak ? ' <span style="font-size:10px;opacity:0.5">(break)</span>' : ''}</div>
+              <div class="today-workout-bar"><div class="today-workout-bar-fill"></div></div>
+            </div>
+            <div class="today-workout-time">${fmtHM(e.minutes)}</div>
           </div>`;
         }).join('');
 
-        // Summary row
-        const goalDiff = workMin - GOAL_HOURS * 60;
-        const goalDiffText = goalDiff >= 0
-          ? `<span style="color:#39d353">+${fmtHM(goalDiff)} over</span>`
-          : `<span style="color:var(--text-secondary)">${fmtHM(Math.abs(goalDiff))} to go</span>`;
-        document.getElementById('todaySummary').innerHTML = `
-          <div class="today-summary-item">
-            <div class="today-summary-label">Work</div>
-            <div class="today-summary-value">${fmtHM(workMin)}</div>
-          </div>
-          <div class="today-summary-item">
-            <div class="today-summary-label">Break</div>
-            <div class="today-summary-value">${fmtHM(breakMin)}</div>
-          </div>
-          <div class="today-summary-item">
-            <div class="today-summary-label">Ratio</div>
-            <div class="today-summary-value" style="font-size:12px">${totalMin > 0 ? Math.round(breakMin/totalMin*100) : 0}% break</div>
-          </div>
-          <div class="today-summary-item">
-            <div class="today-summary-label">vs Goal</div>
-            <div class="today-summary-value" style="font-size:12px">${goalDiffText}</div>
-          </div>
-        `;
-
         // Hover interactions
-        const rows = projEl.querySelectorAll('.today-project-row');
-        const barSegs = bar.querySelectorAll('.today-bar-seg');
-
-        function highlight(proj) {
-          rows.forEach(r => r.classList.toggle('highlight', r.dataset.project === proj));
-          barSegs.forEach(s => {
-            s.classList.toggle('highlight', s.dataset.project === proj);
-            s.classList.toggle('dim', s.dataset.project !== proj);
+        const items = projEl.querySelectorAll('.today-workout-item');
+        function hlSet(proj) {
+          items.forEach(el => {
+            el.classList.toggle('highlight', el.dataset.project === proj);
+            el.classList.toggle('dim', el.dataset.project !== proj);
           });
         }
-        function clearHL() {
-          rows.forEach(r => r.classList.remove('highlight'));
-          barSegs.forEach(s => s.classList.remove('highlight', 'dim'));
-        }
-        rows.forEach(r => { r.addEventListener('mouseenter', () => highlight(r.dataset.project)); r.addEventListener('mouseleave', clearHL); });
-        barSegs.forEach(s => { s.addEventListener('mouseenter', () => highlight(s.dataset.project)); s.addEventListener('mouseleave', clearHL); });
+        function hlClear() { items.forEach(el => el.classList.remove('highlight', 'dim')); }
+        items.forEach(el => {
+          el.addEventListener('mouseenter', () => hlSet(el.dataset.project));
+          el.addEventListener('mouseleave', hlClear);
+        });
       })();
 
       // Stats
