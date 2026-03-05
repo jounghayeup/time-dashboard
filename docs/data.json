@@ -89,6 +89,36 @@
       "date": "2026-03-04",
       "project": "일반업무",
       "minutes": 27
+    },
+    {
+      "date": "2026-03-05",
+      "project": "교육 세미나",
+      "minutes": 90
+    },
+    {
+      "date": "2026-03-05",
+      "project": "휴게",
+      "minutes": 85
+    },
+    {
+      "date": "2026-03-05",
+      "project": "데일리 킥오프",
+      "minutes": 90
+    },
+    {
+      "date": "2026-03-05",
+      "project": "HMC EV",
+      "minutes": 59
+    },
+    {
+      "date": "2026-03-05",
+      "project": "KMX",
+      "minutes": 74
+    },
+    {
+      "date": "2026-03-05",
+      "project": "GENERAL",
+      "minutes": 23
     }
   ]
 }
