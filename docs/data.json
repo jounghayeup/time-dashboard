@@ -119,6 +119,51 @@
       "date": "2026-03-05",
       "project": "GENERAL",
       "minutes": 23
+    },
+    {
+      "date": "2026-03-06",
+      "project": "Daily Kickoff",
+      "minutes": 58
+    },
+    {
+      "date": "2026-03-06",
+      "project": "KMX",
+      "minutes": 54
+    },
+    {
+      "date": "2026-03-06",
+      "project": "온보딩",
+      "minutes": 73
+    },
+    {
+      "date": "2026-03-06",
+      "project": "GENERAL",
+      "minutes": 72
+    },
+    {
+      "date": "2026-03-06",
+      "project": "3DVS",
+      "minutes": 150
+    },
+    {
+      "date": "2026-03-06",
+      "project": "미팅",
+      "minutes": 131
+    },
+    {
+      "date": "2026-03-06",
+      "project": "휴게",
+      "minutes": 60
+    },
+    {
+      "date": "2026-03-06",
+      "project": "CVS",
+      "minutes": 22
+    },
+    {
+      "date": "2026-03-06",
+      "project": "EV",
+      "minutes": 17
     }
   ]
 }
