@@ -164,6 +164,21 @@
       "date": "2026-03-06",
       "project": "EV",
       "minutes": 17
+    },
+    {
+      "date": "2026-03-08",
+      "project": "Daily Kickoff",
+      "minutes": 15
+    },
+    {
+      "date": "2026-03-08",
+      "project": "휴게",
+      "minutes": 52
+    },
+    {
+      "date": "2026-03-08",
+      "project": "3DVS",
+      "minutes": 319
     }
   ]
 }
