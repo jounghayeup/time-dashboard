@@ -179,6 +179,31 @@
       "date": "2026-03-08",
       "project": "3DVS",
       "minutes": 319
+    },
+    {
+      "date": "2026-03-09",
+      "project": "Daily Kickoff",
+      "minutes": 58
+    },
+    {
+      "date": "2026-03-09",
+      "project": "3DVS",
+      "minutes": 278
+    },
+    {
+      "date": "2026-03-09",
+      "project": "미팅",
+      "minutes": 60
+    },
+    {
+      "date": "2026-03-09",
+      "project": "GENERAL",
+      "minutes": 30
+    },
+    {
+      "date": "2026-03-09",
+      "project": "휴게",
+      "minutes": 30
     }
   ]
 }
