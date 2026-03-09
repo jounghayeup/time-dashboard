@@ -462,6 +462,10 @@
             <option value="90">3 months</option>
             <option value="0">All</option>
           </select>
+          <label>Month</label>
+          <select id="monthFilter">
+            <option value="ALL" selected>All months</option>
+          </select>
           <label>Project</label>
           <select id="projectFilter"></select>
         </div>
@@ -729,8 +733,18 @@
 
       // Filter setup
       const filter = document.getElementById('projectFilter');
+      const monthFilter = document.getElementById('monthFilter');
       filter.innerHTML = '<option value="ALL">All Projects</option>' +
         projects.map(p => `<option value="${p}">${p}</option>`).join('');
+
+      const months = [...new Set(entries.map(e => e.date.slice(0, 7)))].sort();
+      monthFilter.innerHTML = '<option value="ALL" selected>All months</option>' +
+        months.map(m => {
+          const [y, mm] = m.split('-');
+          const d = new Date(Number(y), Number(mm) - 1, 1);
+          const label = d.toLocaleString('en', { month: 'short' });
+          return `<option value="${m}">${label} ${y}</option>`;
+        }).join('');
 
       const legendRow = document.getElementById('legendRow');
       const activeProjects = new Set(projects);
@@ -1093,10 +1107,18 @@
       function applyFilters() {
         const proj = filter.value;
         const days = parseInt(rangeFilter.value);
+        const month = monthFilter.value;
         let filtered = proj === 'ALL' ? entries : entries.filter(e => e.project === proj);
+
+        if (month !== 'ALL') {
+          filtered = filtered.filter(e => e.date.startsWith(month));
+        }
+
         // Apply legend pill toggles
         filtered = filtered.filter(e => activeProjects.has(e.project));
-        if (days > 0) {
+
+        // When a specific month is selected, prioritize month view over rolling day window
+        if (days > 0 && month === 'ALL') {
           const cutoff = new Date();
           cutoff.setDate(cutoff.getDate() - days);
           const cutoffStr = cutoff.toISOString().slice(0, 10);
@@ -1109,6 +1131,7 @@
 
       filter.addEventListener('change', applyFilters);
       rangeFilter.addEventListener('change', applyFilters);
+      monthFilter.addEventListener('change', applyFilters);
       applyFilters();
 
 
