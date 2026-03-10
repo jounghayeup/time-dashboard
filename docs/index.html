@@ -87,6 +87,13 @@
     }
     input[type="date"]:hover { border-color: var(--border-accent); background: var(--bg-card-hover); }
     input[type="date"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .range-quick-btn {
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+      font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 500;
+      border-radius: 8px; padding: 7px 10px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .range-quick-btn:hover { border-color: var(--border-accent); color: var(--text-primary); background: var(--bg-card-hover); }
 
     /* Stats */
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
@@ -466,6 +473,8 @@
           <input id="startDateFilter" type="date" />
           <span style="color:var(--text-muted)">~</span>
           <input id="endDateFilter" type="date" />
+          <button id="thisMonthBtn" class="range-quick-btn" type="button">이번달</button>
+          <button id="prevMonthBtn" class="range-quick-btn" type="button">전달</button>
           <label>Project</label>
           <select id="projectFilter"></select>
         </div>
@@ -735,17 +744,50 @@
       const filter = document.getElementById('projectFilter');
       const startDateFilter = document.getElementById('startDateFilter');
       const endDateFilter = document.getElementById('endDateFilter');
+      const thisMonthBtn = document.getElementById('thisMonthBtn');
+      const prevMonthBtn = document.getElementById('prevMonthBtn');
       filter.innerHTML = '<option value="ALL">All Projects</option>' +
         projects.map(p => `<option value="${p}">${p}</option>`).join('');
 
       const allDates = [...new Set(entries.map(e => e.date))].sort();
       if (allDates.length) {
-        const latest = allDates[allDates.length - 1];
-        const s = new Date(latest + 'T00:00:00');
+        const minDate = allDates[0];
+        const maxDate = allDates[allDates.length - 1];
+        startDateFilter.min = minDate;
+        startDateFilter.max = maxDate;
+        endDateFilter.min = minDate;
+        endDateFilter.max = maxDate;
+
+        const s = new Date(maxDate + 'T00:00:00');
         s.setDate(s.getDate() - 13); // default recent 14 days
-        startDateFilter.value = dateStr(s);
-        endDateFilter.value = latest;
+        startDateFilter.value = dateStr(s) < minDate ? minDate : dateStr(s);
+        endDateFilter.value = maxDate;
       }
+
+      function setDateRange(start, end) {
+        const minDate = startDateFilter.min || start;
+        const maxDate = endDateFilter.max || end;
+        const s = start < minDate ? minDate : start;
+        const e = end > maxDate ? maxDate : end;
+        startDateFilter.value = s;
+        endDateFilter.value = e;
+        if (startDateFilter.value > endDateFilter.value) startDateFilter.value = endDateFilter.value;
+        applyFilters();
+      }
+
+      thisMonthBtn.addEventListener('click', () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        setDateRange(dateStr(start), dateStr(end));
+      });
+
+      prevMonthBtn.addEventListener('click', () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const end = new Date(now.getFullYear(), now.getMonth(), 0);
+        setDateRange(dateStr(start), dateStr(end));
+      });
 
       const legendRow = document.getElementById('legendRow');
       const activeProjects = new Set(projects);
@@ -1105,8 +1147,19 @@
 
       function applyFilters() {
         const proj = filter.value;
-        const start = startDateFilter.value;
-        const end = endDateFilter.value;
+        let start = startDateFilter.value;
+        let end = endDateFilter.value;
+
+        // Prevent invalid range (start > end)
+        if (start && end && start > end) {
+          end = start;
+          endDateFilter.value = end;
+        }
+
+        // Keep reciprocal min/max synced in picker UI
+        startDateFilter.max = end || (endDateFilter.max || '');
+        endDateFilter.min = start || (startDateFilter.min || '');
+
         let filtered = proj === 'ALL' ? entries : entries.filter(e => e.project === proj);
 
         // Apply legend pill toggles
