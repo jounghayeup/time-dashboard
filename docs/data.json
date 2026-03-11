@@ -229,6 +229,31 @@
       "date": "2026-03-10",
       "project": "휴게",
       "minutes": 65
+    },
+    {
+      "date": "2026-03-11",
+      "project": "데일리 킥오프",
+      "minutes": 68
+    },
+    {
+      "date": "2026-03-11",
+      "project": "휴게",
+      "minutes": 53
+    },
+    {
+      "date": "2026-03-11",
+      "project": "미팅",
+      "minutes": 59
+    },
+    {
+      "date": "2026-03-11",
+      "project": "EV",
+      "minutes": 389
+    },
+    {
+      "date": "2026-03-11",
+      "project": "General 업무",
+      "minutes": 20
     }
   ]
 }
