@@ -254,6 +254,31 @@
       "date": "2026-03-11",
       "project": "General 업무",
       "minutes": 20
+    },
+    {
+      "date": "2026-03-12",
+      "project": "데일리 킥오프",
+      "minutes": 156
+    },
+    {
+      "date": "2026-03-12",
+      "project": "HMC EV",
+      "minutes": 327
+    },
+    {
+      "date": "2026-03-12",
+      "project": "미팅",
+      "minutes": 177
+    },
+    {
+      "date": "2026-03-12",
+      "project": "GENERAL",
+      "minutes": 88
+    },
+    {
+      "date": "2026-03-12",
+      "project": "휴게",
+      "minutes": 152
     }
   ]
 }
