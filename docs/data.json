@@ -294,6 +294,16 @@
       "date": "2026-03-15",
       "project": "휴게",
       "minutes": 9
+    },
+    {
+      "date": "2026-03-18",
+      "project": "EV",
+      "minutes": 802
+    },
+    {
+      "date": "2026-03-18",
+      "project": "휴게",
+      "minutes": 125
     }
   ]
 }
